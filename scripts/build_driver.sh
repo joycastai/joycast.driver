@@ -14,6 +14,7 @@ NC='\033[0m'
 # Parse arguments first
 MODE=""
 NO_UPDATE=false
+NO_SIGN=false
 
 # Parse all arguments
 for arg in "$@"; do
@@ -24,20 +25,25 @@ for arg in "$@"; do
         --no-update)
             NO_UPDATE=true
             ;;
+        --no-sign)
+            NO_SIGN=true
+            ;;
         --help|-h|help)
-            echo "Usage: $0 [dev|prod] [--no-update]"
-            echo "  dev        - Development build (unsigned)"
-            echo "  prod       - Production build (signed)"
+            echo "Usage: $0 [dev|prod] [--no-update] [--no-sign]"
+            echo "  dev         - Development build with Dev suffix"
+            echo "  prod        - Production build with clean names"
             echo "  --no-update - Skip BlackHole submodule update"
+            echo "  --no-sign   - Skip code signing (unsigned build)"
             echo ""
             echo "Examples:"
-            echo "  $0 dev                    # Build dev version with latest BlackHole"
-            echo "  $0 prod --no-update      # Build prod version with current BlackHole"
+            echo "  $0 dev                    # Build dev version (signed, latest BlackHole)"
+            echo "  $0 prod --no-update      # Build prod version (signed, current BlackHole)"
+            echo "  $0 dev --no-sign         # Build dev version (unsigned, for testing)"
             exit 0
             ;;
         *)
             echo -e "${RED}Error: Unknown argument '$arg'${NC}"
-            echo "Usage: $0 [dev|prod] [--no-update]"
+            echo "Usage: $0 [dev|prod] [--no-update] [--no-sign]"
             echo "Use --help for more information"
             exit 1
             ;;
@@ -81,17 +87,47 @@ fi
 # Load utilities
 source configs/build_utils.sh
 
-# Load configuration
-CONFIG_FILE="configs/joycast_${MODE}.env"
+# Load base configuration
+CONFIG_FILE="configs/config.env"
 echo "Loading configuration: $CONFIG_FILE"
 
-# Validate configuration
-if ! validate_config "$CONFIG_FILE"; then
+if [ ! -f "$CONFIG_FILE" ]; then
+    echo -e "${RED}Error: Configuration file $CONFIG_FILE not found${NC}"
     exit 1
 fi
 
-# Source the configuration
+# Source the base configuration
 source "$CONFIG_FILE"
+
+# Generate dev/prod specific variables
+if [ "$MODE" == "dev" ]; then
+    DRIVER_NAME="$BASE_NAME Dev"
+    BUNDLE_ID="$BASE_BUNDLE_ID.dev"
+    DEVICE_NAME="$BASE_DEVICE_NAME"
+    DEVICE_NAME="${DEVICE_NAME/JoyCast/JoyCast Dev}"
+    DEVICE2_NAME="$BASE_DEVICE2_NAME"
+    DEVICE2_NAME="${DEVICE2_NAME/JoyCast/JoyCast Dev}"
+    BOX_UID="${BASE_NAME}DEV_UID"
+    DEVICE_UID="${BASE_NAME}_Dev_Virtual_Microphone_UID"
+    DEVICE2_UID="${BASE_NAME}_Dev_Virtual_Microphone_2_UID"
+else
+    DRIVER_NAME="$BASE_NAME"
+    BUNDLE_ID="$BASE_BUNDLE_ID"
+    DEVICE_NAME="$BASE_DEVICE_NAME"
+    DEVICE2_NAME="$BASE_DEVICE2_NAME"
+    BOX_UID="${BASE_NAME}_UID"
+    DEVICE_UID="${BASE_NAME}_Virtual_Microphone_UID"
+    DEVICE2_UID="${BASE_NAME}_Virtual_Microphone_2_UID"
+fi
+
+# Code signing logic (same for both dev and prod)
+if [ "$NO_SIGN" = true ]; then
+    CODE_SIGN_IDENTITY=""
+    echo "Build mode: $MODE (unsigned)"
+else
+    CODE_SIGN_IDENTITY="$PROD_CODE_SIGN_IDENTITY"
+    echo "Build mode: $MODE (signed)"
+fi
 
 # Get versions
 BLACKHOLE_VERSION=$(get_blackhole_version)
@@ -103,7 +139,7 @@ echo "JoyCast version: $JOYCAST_VERSION"
 echo "Driver: $DRIVER_NAME.driver"
 
 # Generate preprocessor definitions
-PREPROCESSOR_DEFS=$(generate_preprocessor_defs "$CONFIG_FILE")
+PREPROCESSOR_DEFS=$(generate_preprocessor_defs)
 
 echo -e "${YELLOW}Preprocessor definitions:${NC}"
 echo "$PREPROCESSOR_DEFS"
@@ -179,8 +215,8 @@ if [ -f "LICENSE" ]; then
     echo "JoyCast LICENSE copied"
 fi
 
-# Final signing for production
-if [ "$MODE" == "prod" ] && [ -n "$CODE_SIGN_IDENTITY" ]; then
+# Final signing
+if [ -n "$CODE_SIGN_IDENTITY" ]; then
     echo -e "${YELLOW}Final code signing...${NC}"
     codesign --force --sign "$CODE_SIGN_IDENTITY" \
              --options=runtime \
