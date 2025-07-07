@@ -145,6 +145,10 @@ if [ "$MODE" == "prod" ] && [ -n "$CODE_SIGN_IDENTITY" ]; then
     echo -e "${GREEN}Driver signed successfully${NC}"
 fi
 
+# Clean up temporary build files from submodule
+echo "Cleaning temporary build files from submodule..."
+rm -rf external/blackhole/build/
+
 echo -e "${GREEN}=== Build Complete ===${NC}"
 echo "Driver location: $DRIVER_PATH"
 echo "BlackHole version: $BLACKHOLE_VERSION"
