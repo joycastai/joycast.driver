@@ -27,10 +27,17 @@ if [ "$MODE" != "dev" ] && [ "$MODE" != "prod" ]; then
     exit 1
 fi
 
-# Load configuration to get driver name
-source "configs/joycast_${MODE}.env"
+# Load base configuration
+source "configs/driver.env"
 
-DRIVER_PATH="build/$DRIVER_NAME.driver"
+# Generate driver name and path based on mode
+if [ "$MODE" == "dev" ]; then
+    DRIVER_NAME="$BASE_NAME Dev"
+    DRIVER_PATH="build/dev/$DRIVER_NAME.driver"
+else
+    DRIVER_NAME="$BASE_NAME"
+    DRIVER_PATH="build/prod/$DRIVER_NAME.driver"
+fi
 INSTALL_PATH="/Library/Audio/Plug-Ins/HAL"
 
 # Check if driver is built
@@ -63,14 +70,3 @@ sudo killall -9 coreaudiod 2>/dev/null || true
 
 # Wait a moment for CoreAudio to restart
 sleep 2
-
-echo -e "${GREEN}Installation complete!${NC}"
-echo "$DRIVER_NAME should now appear in your audio devices"
-echo ""
-echo "To verify installation:"
-echo "  - Open Audio MIDI Setup"
-echo "  - Look for '$DEVICE_NAME' in the device list"
-echo ""
-echo "To uninstall:"
-echo "  sudo rm -rf '$INSTALL_PATH/$DRIVER_NAME.driver'"
-echo "  sudo killall -9 coreaudiod" 
