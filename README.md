@@ -4,25 +4,26 @@ JoyCast is a virtual audio driver for macOS based on BlackHole, designed to prov
 
 ## Architecture
 
-This project uses a clean architecture approach:
+This project uses a clean submodule architecture:
 
-- **BlackHole** (submodule) - Core audio driver functionality (GPL-3.0 licensed).
-- **JoyCast** (this repo) - Configuration, customizations, and build tooling.
+- **BlackHole** (`external/blackhole/`) - Core audio driver functionality (GPL-3.0 licensed)
+- **JoyCast** (this repo) - Minimal configuration and build tooling
 
-### Why Submodule Approach?
+### Why This Architecture?
 
-- ✅ **Clean separation** - BlackHole code remains untouched
-- ✅ **Easy updates** - Simple `git submodule update` to get latest BlackHole
-- ✅ **Reduced conflicts** - No merging upstream changes
-- ✅ **Professional structure** - Clear separation of concerns
+- ✅ **Zero source modifications** - BlackHole code remains completely untouched
+- ✅ **Automatic updates** - Build script auto-updates to latest BlackHole
+- ✅ **Clean builds** - All artifacts in root `build/`, submodule stays clean
+- ✅ **Minimal configuration** - Single config file with auto-generated dev/prod differences
+- ✅ **Maximum compatibility** - Inherits BlackHole's `macOS 10.10+` support
 
 ## Quick Start
 
 ### Prerequisites
 
-- macOS 10.13 or later
-- Xcode 12 or later
-- Valid Apple Developer certificate (for signing)
+- **macOS 10.10+** (inherited from BlackHole)
+- **Xcode 12+** 
+- **Apple Developer certificate** (optional, use `--no-sign` flag for testing)
 
 ### Build and Install
 
@@ -31,21 +32,24 @@ This project uses a clean architecture approach:
 git clone --recursive https://github.com/your-org/joycast.driver.git
 cd joycast.driver
 
-# Or if already cloned, initialize submodules
-git submodule update --init
-
-# Build production driver
+# Build production driver (auto-updates BlackHole, signed)
 ./scripts/build_driver.sh prod
 
 # Install driver (requires admin privileges)
 ./scripts/install_driver.sh prod
 ```
 
-### Development
+### Development Workflow
 
 ```bash
-# Build development version (unsigned)
+# Build development version (auto-updates BlackHole, signed)
 ./scripts/build_driver.sh dev
+
+# Build without signing (for testing)
+./scripts/build_driver.sh dev --no-sign
+
+# Build with current BlackHole version (no update)
+./scripts/build_driver.sh dev --no-update
 
 # Install development version
 ./scripts/install_driver.sh dev
@@ -53,14 +57,15 @@ git submodule update --init
 
 ## Configuration
 
-Driver configuration is stored in `configs/`:
+**Single configuration file**: `configs/config.env`
 
-- `configs/joycast_prod.env` - Production configuration
-- `configs/joycast_dev.env` - Development configuration
+The build script automatically generates dev/prod differences:
+- **dev**: Adds "Dev" suffixes, ".dev" bundle IDs  
+- **prod**: Clean names and bundle IDs
 
-### Environment Variables
+### Environment Variables (Optional)
 
-Set these environment variables for code signing:
+For code signing (skip with `--no-sign` flag):
 
 ```bash
 export APPLE_DEVELOPER_CERT_NAME="Developer ID Application: Your Name"
@@ -71,44 +76,89 @@ export APPLE_TEAM_ID="XXXXXXXXXX"
 
 ```
 joycast.driver/
-├── BlackHole/           # Git submodule (GPL-3.0)
-├── configs/             # Build configurations
-│   ├── joycast_prod.env
-│   ├── joycast_dev.env
-│   └── build_utils.sh
-├── scripts/             # Build and install scripts
-│   ├── build_driver.sh
+├── external/blackhole/  # Git submodule (always clean)
+├── configs/
+│   ├── config.env       # Single configuration file
+│   └── build_utils.sh   # Build utilities
+├── scripts/
+│   ├── build_driver.sh  # Smart build script with flags
 │   └── install_driver.sh
-├── assets/              # JoyCast-specific assets
-│   └── JoyCast.icns
-├── docs/                # Documentation
-├── releases/            # Release artifacts
-├── build/               # Build output
+├── assets/
+│   └── JoyCast.icns     # Custom icon
+├── build/               # Build outputs (gitignored)
 ├── VERSION              # JoyCast version
-├── LICENSE              # MIT license for JoyCast
-└── README.md            # This file
+├── LICENSE              # MIT license for JoyCast code
+└── README.md
 ```
 
-## Updating BlackHole
+## Build Script Options
 
-To update to a newer version of BlackHole:
+### `./scripts/build_driver.sh [mode] [flags]`
 
+**Modes:**
+- `dev` - Development build with "Dev" suffixes
+- `prod` - Production build with clean names (default)
+
+**Flags:**
+- `--no-update` - Skip BlackHole submodule update
+- `--no-sign` - Build unsigned (for testing without certificates)
+- `--help` - Show usage information
+
+**Examples:**
 ```bash
-cd BlackHole
-git fetch origin
-git checkout v0.6.2  # or latest tag
-cd ..
-git add BlackHole
-git commit -m "Update BlackHole to v0.6.2"
+./scripts/build_driver.sh dev                    # Dev build, latest BlackHole, signed
+./scripts/build_driver.sh prod --no-update      # Prod build, current BlackHole, signed  
+./scripts/build_driver.sh dev --no-sign         # Dev build, unsigned (for testing)
+./scripts/build_driver.sh prod --no-sign --no-update  # Prod build, current, unsigned
 ```
 
-## Customizations
+## BlackHole Updates
 
-JoyCast customizations are applied via preprocessor definitions at build time:
+**Automatic (recommended):**
+```bash
+# Build script automatically updates to latest BlackHole
+./scripts/build_driver.sh prod
+```
 
-- Driver name: "JoyCast"
-- Bundle ID: `com.joycast.virtualmic`
-- Icon: Custom JoyCast icon
-- Device names: "JoyCast Virtual Microphone"
+**Manual:**
+```bash
+# Update submodule manually
+git submodule update --remote external/blackhole
 
-All customizations are defined in config files - no BlackHole source code is modified.
+# Or pin to specific version
+cd external/blackhole
+git checkout v0.6.2
+cd ../..
+git add external/blackhole
+git commit -m "Pin BlackHole to v0.6.2"
+```
+
+## How It Works
+
+1. **Clean Architecture**: JoyCast configurations are applied via GCC preprocessor definitions at build time
+2. **No Source Changes**: BlackHole source code is never modified
+3. **Compile-Time Customization**: All JoyCast branding applied during compilation
+4. **Automatic Cleanup**: Build script removes temporary files from submodule
+
+### JoyCast Customizations
+
+Applied at compile time via preprocessor definitions:
+
+- **Driver name**: "JoyCast" / "JoyCast Dev"
+- **Bundle ID**: `com.joycast.virtualmic` / `com.joycast.virtualmic.dev`
+- **Device names**: "JoyCast Virtual Microphone" / "JoyCast Dev Virtual Microphone"
+- **Icon**: Custom JoyCast.icns
+- **Unique IDs**: JoyCast-specific device UIDs
+
+## Compatibility
+
+- **Driver**: macOS 10.10+ (inherited from BlackHole)
+- **Build Environment**: macOS 10.13+ (Xcode requirement)
+- **Architecture**: Universal Binary (Intel + Apple Silicon)
+
+## License
+
+- **JoyCast code**: MIT License
+- **BlackHole**: GPL-3.0 License (separate submodule)
+
+This clean separation ensures license compliance while maintaining a professional development workflow.
