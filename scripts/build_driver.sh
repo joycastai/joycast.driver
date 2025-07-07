@@ -147,7 +147,7 @@ fi
 
 # Get versions
 BLACKHOLE_VERSION=$(get_blackhole_version)
-JOYCAST_VERSION=$(cat VERSION 2>/dev/null | tr -d '\n' || echo "0.6.1")
+JOYCAST_VERSION="0.6.1"
 
 echo "Build mode: $MODE"
 echo "BlackHole version: $BLACKHOLE_VERSION"

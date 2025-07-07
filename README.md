@@ -80,12 +80,11 @@ joycast.driver/
 ├── configs/
 │   └── config.env       # Single configuration file
 ├── scripts/
-│   ├── build_driver.sh  # Smart build script with all utilities
+│   ├── build_driver.sh  # Self-contained build script
 │   └── install_driver.sh
 ├── assets/
 │   └── JoyCast.icns     # Custom icon
 ├── build/               # Build outputs (gitignored)
-├── VERSION              # JoyCast version
 ├── LICENSE              # MIT license for JoyCast code
 └── README.md
 ```
