@@ -11,6 +11,42 @@ YELLOW='\033[0;33m'
 RED='\033[0;31m'
 NC='\033[0m'
 
+# Parse arguments first
+MODE=""
+NO_UPDATE=false
+
+# Parse all arguments
+for arg in "$@"; do
+    case $arg in
+        dev|prod)
+            MODE="$arg"
+            ;;
+        --no-update)
+            NO_UPDATE=true
+            ;;
+        --help|-h|help)
+            echo "Usage: $0 [dev|prod] [--no-update]"
+            echo "  dev        - Development build (unsigned)"
+            echo "  prod       - Production build (signed)"
+            echo "  --no-update - Skip BlackHole submodule update"
+            echo ""
+            echo "Examples:"
+            echo "  $0 dev                    # Build dev version with latest BlackHole"
+            echo "  $0 prod --no-update      # Build prod version with current BlackHole"
+            exit 0
+            ;;
+        *)
+            echo -e "${RED}Error: Unknown argument '$arg'${NC}"
+            echo "Usage: $0 [dev|prod] [--no-update]"
+            echo "Use --help for more information"
+            exit 1
+            ;;
+    esac
+done
+
+# Set default mode if not specified
+MODE="${MODE:-prod}"
+
 echo -e "${GREEN}=== JoyCast Driver Build (Clean Architecture) ===${NC}"
 
 # Check if we're in the right directory
@@ -41,32 +77,6 @@ if [ "$NO_UPDATE" = false ]; then
 else
     echo -e "${YELLOW}Skipping submodule update (--no-update flag provided)${NC}"
 fi
-
-# Parse arguments
-MODE=""
-NO_UPDATE=false
-
-# Parse all arguments
-for arg in "$@"; do
-    case $arg in
-        dev|prod)
-            MODE="$arg"
-            ;;
-        --no-update)
-            NO_UPDATE=true
-            ;;
-        *)
-            echo "Usage: $0 [dev|prod] [--no-update]"
-            echo "  dev        - Development build (unsigned)"
-            echo "  prod       - Production build (signed)"
-            echo "  --no-update - Skip BlackHole submodule update"
-            exit 1
-            ;;
-    esac
-done
-
-# Set default mode if not specified
-MODE="${MODE:-prod}"
 
 # Load utilities
 source configs/build_utils.sh
