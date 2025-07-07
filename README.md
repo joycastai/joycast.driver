@@ -13,7 +13,7 @@ This project uses a clean submodule architecture:
 
 - ✅ **Zero source modifications** - BlackHole code remains completely untouched
 - ✅ **Automatic updates** - Build script auto-updates to latest BlackHole
-- ✅ **Clean builds** - All artifacts in root `build/`, submodule stays clean
+- ✅ **Clean builds** - All artifacts in separate `build/dev/` and `build/prod/` directories, submodule stays clean
 - ✅ **Minimal configuration** - Single config file with auto-generated dev/prod differences
 - ✅ **Maximum compatibility** - Inherits BlackHole's `macOS 10.10+` support
 
@@ -59,9 +59,62 @@ cd joycast.driver
 
 **Single configuration file**: `configs/config.env`
 
+Contains all [BlackHole customization parameters](https://github.com/ExistentialAudio/BlackHole):
+
+### Core Driver Parameters
+- `BASE_NAME` - Driver name (JoyCast)
+- `BASE_BUNDLE_ID` - Bundle identifier
+- `PLUGIN_ICON` - Driver icon file
+- `MANUFACTURER_NAME` - Manufacturer display name
+
+### Device Configuration  
+- `BASE_DEVICE_NAME` / `BASE_DEVICE2_NAME` - Device display names
+- `DEVICE_IS_HIDDEN` / `DEVICE2_IS_HIDDEN` - Device visibility
+- `DEVICE_HAS_INPUT` / `DEVICE2_HAS_INPUT` - Input capabilities
+- `DEVICE_HAS_OUTPUT` / `DEVICE2_HAS_OUTPUT` - Output capabilities
+
+### Audio Parameters
+- `NUMBER_OF_CHANNELS` - Channel count (2)
+- `LATENCY_FRAME_SIZE` - Latency in frames (0 = zero latency)
+- `SAMPLE_RATES` - Supported sample rates (44100,48000)
+
+### Build Differences
 The build script automatically generates dev/prod differences:
 - **dev**: Adds "Dev" suffixes, ".dev" bundle IDs  
 - **prod**: Clean names and bundle IDs
+
+### Advanced Customization Examples
+
+**High-resolution audio support:**
+```bash
+# Edit configs/config.env
+SAMPLE_RATES="44100,48000,88200,96000,176400,192000"
+```
+
+**Multi-channel setup (16 channels):**
+```bash
+# Edit configs/config.env  
+NUMBER_OF_CHANNELS=16
+LATENCY_FRAME_SIZE=512  # Higher latency for stability
+```
+
+**Custom device visibility:**
+```bash
+# Edit configs/config.env
+DEVICE_IS_HIDDEN=false      # Primary device visible
+DEVICE2_IS_HIDDEN=false     # Mirror device also visible  
+```
+
+**Separate input/output devices:**
+```bash
+# Edit configs/config.env
+DEVICE_HAS_INPUT=true       # Primary: input only
+DEVICE_HAS_OUTPUT=false
+DEVICE2_HAS_INPUT=false     # Mirror: output only  
+DEVICE2_HAS_OUTPUT=true
+```
+
+All changes apply to both dev and prod builds automatically.
 
 ### Environment Variables (Optional)
 
@@ -85,9 +138,30 @@ joycast.driver/
 ├── assets/
 │   └── JoyCast.icns     # Custom icon
 ├── build/               # Build outputs (gitignored)
+│   ├── dev/             # Development builds
+│   └── prod/            # Production builds
 ├── LICENSE              # MIT license for JoyCast code
 └── README.md
 ```
+
+## Build Outputs
+
+All build outputs are generated in separate directories to avoid conflicts:
+
+```
+build/
+├── dev/
+│   ├── JoyCast Dev.driver      # Development driver
+│   └── JoyCast Dev.driver.dSYM # Debug symbols for dev
+└── prod/
+    ├── JoyCast.driver          # Production driver
+    └── JoyCast.driver.dSYM     # Debug symbols for prod
+```
+
+This structure allows you to:
+- Keep both dev and prod builds simultaneously
+- Switch between versions quickly without rebuilding
+- Compare outputs between different configurations
 
 ## Build Script Options
 
@@ -140,13 +214,27 @@ git commit -m "Pin BlackHole to v0.6.2"
 
 ### JoyCast Customizations
 
-Applied at compile time via preprocessor definitions:
+Applied at compile time via [BlackHole preprocessor definitions](https://github.com/ExistentialAudio/BlackHole):
 
-- **Driver name**: "JoyCast" / "JoyCast Dev"
-- **Bundle ID**: `com.joycast.virtualmic` / `com.joycast.virtualmic.dev`
-- **Device names**: "JoyCast Virtual Microphone" / "JoyCast Dev Virtual Microphone"
-- **Icon**: Custom JoyCast.icns
-- **Unique IDs**: JoyCast-specific device UIDs
+**Core Driver:**
+- `kDriver_Name`: "JoyCast" 
+- `kPlugIn_BundleID`: com.joycast.virtualmic / com.joycast.virtualmic.dev
+- `kPlugIn_Icon`: "JoyCast.icns"
+
+**Primary Device:**
+- `kDevice_Name`: "JoyCast Virtual Microphone" / "JoyCast Dev Virtual Microphone"
+- `kDevice_IsHidden`: false (visible device)
+- `kDevice_HasInput`: true, `kDevice_HasOutput`: false
+
+**Mirror Device:** 
+- `kDevice2_Name`: "JoyCast Virtual Output" / "JoyCast Dev Virtual Output"  
+- `kDevice2_IsHidden`: true (hidden device)
+- `kDevice2_HasInput`: true, `kDevice2_HasOutput`: false
+
+**Audio Settings:**
+- `kNumber_Of_Channels`: 2
+- `kLatency_Frame_Size`: 0 (zero additional latency)
+- `kSampleRates`: "44100,48000"
 
 ## Compatibility
 

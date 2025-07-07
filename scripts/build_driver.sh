@@ -91,8 +91,9 @@ generate_preprocessor_defs() {
     local safe_manufacturer_name="${MANUFACTURER_NAME// /\\ }"
     local safe_device2_name="${DEVICE2_NAME// /\\ }"
     
-    # Generate the preprocessor definitions string
-    echo "kDriver_Name=\\\"JoyCast\\\" kPlugIn_BundleID=\\\"$BUNDLE_ID\\\" kPlugIn_Icon=\\\"JoyCast.icns\\\" kManufacturer_Name=\\\"$safe_manufacturer_name\\\" kDevice_Name=\\\"$safe_device_name\\\" kDevice2_Name=\\\"$safe_device2_name\\\" kBox_UID=\\\"$BOX_UID\\\" kDevice_UID=\\\"$DEVICE_UID\\\" kDevice2_UID=\\\"$DEVICE2_UID\\\" kHas_Driver_Name_Format=false kNumber_Of_Channels=$NUMBER_OF_CHANNELS kDevice_HasInput=$DEVICE_HAS_INPUT kDevice_HasOutput=$DEVICE_HAS_OUTPUT kDevice2_HasInput=$DEVICE2_HAS_INPUT kDevice2_HasOutput=$DEVICE2_HAS_OUTPUT kDevice_IsHidden=$DEVICE_IS_HIDDEN kDevice2_IsHidden=$DEVICE2_IS_HIDDEN"
+    # Generate comprehensive preprocessor definitions string
+    # Based on BlackHole customization parameters: https://github.com/ExistentialAudio/BlackHole
+    echo "kDriver_Name=\\\"JoyCast\\\" kPlugIn_BundleID=\\\"$BUNDLE_ID\\\" kPlugIn_Icon=\\\"$PLUGIN_ICON\\\" kManufacturer_Name=\\\"$safe_manufacturer_name\\\" kDevice_Name=\\\"$safe_device_name\\\" kDevice_IsHidden=$DEVICE_IS_HIDDEN kDevice_HasInput=$DEVICE_HAS_INPUT kDevice_HasOutput=$DEVICE_HAS_OUTPUT kDevice2_Name=\\\"$safe_device2_name\\\" kDevice2_IsHidden=$DEVICE2_IS_HIDDEN kDevice2_HasInput=$DEVICE2_HAS_INPUT kDevice2_HasOutput=$DEVICE2_HAS_OUTPUT kBox_UID=\\\"$BOX_UID\\\" kDevice_UID=\\\"$DEVICE_UID\\\" kDevice2_UID=\\\"$DEVICE2_UID\\\" kLatency_Frame_Size=$LATENCY_FRAME_SIZE kNumber_Of_Channels=$NUMBER_OF_CHANNELS kSampleRates='$SAMPLE_RATES'"
 }
 
 get_blackhole_version() {
@@ -136,6 +137,9 @@ else
     DEVICE2_UID="${BASE_NAME}_Virtual_Microphone_2_UID"
 fi
 
+# Set audio parameters from config (same for dev/prod)
+# These correspond directly to BlackHole customization parameters
+
 # Code signing logic (same for both dev and prod)
 if [ "$NO_SIGN" = true ]; then
     FINAL_CODE_SIGN_IDENTITY=""
@@ -160,10 +164,10 @@ PREPROCESSOR_DEFS=$(generate_preprocessor_defs)
 echo -e "${YELLOW}Preprocessor definitions:${NC}"
 echo "$PREPROCESSOR_DEFS"
 
-# Clean previous builds
-echo "Cleaning previous builds..."
-rm -rf build/
-mkdir -p build/
+# Clean previous build for this mode
+echo "Cleaning previous $MODE build..."
+rm -rf build/$MODE/
+mkdir -p build/$MODE/
 
 # Build using BlackHole project but output to our build directory
 echo -e "${YELLOW}Building driver...${NC}"
@@ -178,7 +182,7 @@ BUILD_ARGS=(
     MARKETING_VERSION="$JOYCAST_VERSION"
     DEVELOPMENT_TEAM="$DEVELOPMENT_TEAM"
     ENABLE_HARDENED_RUNTIME=YES
-    CONFIGURATION_BUILD_DIR="$(pwd)/build"
+    CONFIGURATION_BUILD_DIR="$(pwd)/build/$MODE"
 )
 
 # Add code signing configuration
@@ -200,7 +204,7 @@ xcodebuild \
 echo -e "${GREEN}Build completed!${NC}"
 
 # Check if driver was created
-DRIVER_PATH="build/$DRIVER_NAME.driver"
+DRIVER_PATH="build/$MODE/$DRIVER_NAME.driver"
 if [ ! -d "$DRIVER_PATH" ]; then
     echo -e "${RED}Error: Built driver not found at $DRIVER_PATH${NC}"
     exit 1
@@ -212,11 +216,11 @@ echo "Driver built successfully at: $DRIVER_PATH"
 RESOURCES_PATH="$DRIVER_PATH/Contents/Resources"
 
 # Copy JoyCast icon
-if [ -f "assets/JoyCast.icns" ]; then
-    cp "assets/JoyCast.icns" "$RESOURCES_PATH/"
-    echo "JoyCast icon copied"
+if [ -f "assets/$PLUGIN_ICON" ]; then
+    cp "assets/$PLUGIN_ICON" "$RESOURCES_PATH/"
+    echo "JoyCast icon copied: $PLUGIN_ICON"
 else
-    echo -e "${YELLOW}Warning: JoyCast.icns not found in assets/${NC}"
+    echo -e "${YELLOW}Warning: $PLUGIN_ICON not found in assets/${NC}"
 fi
 
 # Add license files for GPL compliance
