@@ -4,10 +4,12 @@ JoyCast is a virtual audio driver for macOS based on BlackHole, designed to prov
 
 ## ✨ Recent Updates
 
-- **✅ Fixed driver conflict issue** - Dev and prod drivers now have unique names, preventing conflicts
-- **✅ Dual device support** - Both `JoyCast Virtual Microphone` and `JoyCast Dev Virtual Microphone` can run simultaneously
-- **✅ Improved build system** - Better escaping and error handling for driver names with spaces
-- **✅ Verified signatures** - Both dev and prod builds properly signed and working
+- **✅ Universal Architecture** - Native support for Intel and Apple Silicon (arm64 + x86_64)
+- **✅ Strict Environment Validation** - Automatic checks for macOS, Xcode, and code signing certificates
+- **✅ Reproducible Builds** - BlackHole commit SHA tracked for build reproducibility
+- **✅ Enhanced Installation** - Automatic backup, signature verification, and safe CoreAudio restart
+- **✅ Production-Ready Security** - All builds require code signing (no unsigned drivers)
+- **✅ Improved Build Scripts** - Strict bash flags, better error handling, and enhanced logging
 
 ## Architecture
 
@@ -22,15 +24,28 @@ This project uses a clean submodule architecture:
 - ✅ **Automatic updates** - Build script auto-updates to latest BlackHole
 - ✅ **Clean builds** - All artifacts in separate `build/dev/` and `build/prod/` directories, submodule stays clean
 - ✅ **Minimal configuration** - Single config file with auto-generated dev/prod differences
-- ✅ **Maximum compatibility** - Inherits BlackHole's `macOS 10.10+` support
+- ✅ **Universal compatibility** - Native support for Intel and Apple Silicon Macs
+- ✅ **Reproducible builds** - BlackHole commit SHA tracked for consistent results
 
 ## Quick Start
 
 ### Prerequisites
 
-- **macOS 10.10+** (inherited from BlackHole)
-- **Xcode 12+** 
-- **Apple Developer certificate** (optional, use `--no-sign` flag for testing)
+- **macOS 10.13+** (build environment requirement)
+- **Xcode or Xcode Command Line Tools** 
+- **Apple Developer certificate** (Required - all builds are signed)
+- **Apple Team ID** (Required for code signing)
+
+### Code Signing Setup
+
+Create `configs/credentials.env`:
+```bash
+# Apple Developer Team ID
+APPLE_TEAM_ID="XXXXXXXXXX"
+
+# Code Signing Certificate Name
+CODE_SIGN_CERT_NAME="Developer ID Application: Your Name (XXXXXXXXXX)"
+```
 
 ### Build and Install
 
@@ -44,21 +59,11 @@ cd joycast.driver
 
 # Install driver (requires admin privileges)
 ./scripts/install_driver.sh prod
-```
 
-### Development Workflow
-
-```bash
-# Build development version (auto-updates BlackHole, signed)
+# Build dev driver (auto-updates BlackHole, signed)
 ./scripts/build_driver.sh dev
 
-# Build without signing (for testing)
-./scripts/build_driver.sh dev --no-sign
-
-# Build with current BlackHole version (no update)
-./scripts/build_driver.sh dev --no-update
-
-# Install development version
+# Install development version (requires admin privileges)
 ./scripts/install_driver.sh dev
 ```
 
@@ -83,7 +88,7 @@ Contains all [BlackHole customization parameters](https://github.com/Existential
 ### Audio Parameters
 - `NUMBER_OF_CHANNELS` - Channel count (2)
 - `LATENCY_FRAME_SIZE` - Latency in frames (0 = zero latency)
-- `SAMPLE_RATES` - Supported sample rates (44100,48000)
+- `SAMPLE_RATES` - Supported sample rates (48000)
 
 ### Build Differences
 The build script automatically generates dev/prod differences:
@@ -99,53 +104,7 @@ After installation, you'll see these devices in **System Preferences > Sound**:
 **Development Build:**  
 - `JoyCast Dev Virtual Microphone` (2 channels, 48kHz)
 
-**Both Installed (Recommended for Development):**
-- `JoyCast Virtual Microphone` ← Production version
-- `JoyCast Dev Virtual Microphone` ← Development version
-
 Both devices can run simultaneously without conflicts, allowing seamless testing and production use.
-
-### Advanced Customization Examples
-
-**High-resolution audio support:**
-```bash
-# Edit configs/driver.env
-SAMPLE_RATES="44100,48000,88200,96000,176400,192000"
-```
-
-**Multi-channel setup (16 channels):**
-```bash
-# Edit configs/driver.env  
-NUMBER_OF_CHANNELS=16
-LATENCY_FRAME_SIZE=512  # Higher latency for stability
-```
-
-**Custom device visibility:**
-```bash
-# Edit configs/driver.env
-DEVICE_IS_HIDDEN=false      # Primary device visible
-DEVICE2_IS_HIDDEN=false     # Mirror device also visible  
-```
-
-**Separate input/output devices:**
-```bash
-# Edit configs/driver.env
-DEVICE_HAS_INPUT=true       # Primary: input only
-DEVICE_HAS_OUTPUT=false
-DEVICE2_HAS_INPUT=false     # Mirror: output only  
-DEVICE2_HAS_OUTPUT=true
-```
-
-All changes apply to both dev and prod builds automatically.
-
-### Environment Variables (Optional)
-
-For code signing (skip with `--no-sign` flag):
-
-```bash
-export APPLE_DEVELOPER_CERT_NAME="Developer ID Application: Your Name"
-export APPLE_TEAM_ID="XXXXXXXXXX"
-```
 
 ## Project Structure
 
@@ -153,16 +112,17 @@ export APPLE_TEAM_ID="XXXXXXXXXX"
 joycast.driver/
 ├── external/blackhole/  # Git submodule (always clean)
 ├── configs/
-│   └── driver.env       # Single configuration file
+│   ├── driver.env       # Single configuration file
+│   └── credentials.env  # Code signing credentials
 ├── scripts/
 │   ├── build_driver.sh  # Self-contained build script
 │   └── install_driver.sh
 ├── assets/
-│   └── JoyCast.icns     # Custom icon
+│   └── joycast.icns     # Custom icon
 ├── build/               # Build outputs (gitignored)
 │   ├── dev/             # Development builds
 │   └── prod/            # Production builds
-├── LICENSE              # MIT license for JoyCast code
+├── LICENSE              
 └── README.md
 ```
 
@@ -173,10 +133,10 @@ All build outputs are generated in separate directories to avoid conflicts:
 ```
 build/
 ├── dev/
-│   ├── JoyCast Dev.driver      # Development driver
+│   ├── JoyCast Dev.driver      # Development driver (universal binary)
 │   └── JoyCast Dev.driver.dSYM # Debug symbols for dev
 └── prod/
-    ├── JoyCast.driver          # Production driver
+    ├── JoyCast.driver          # Production driver (universal binary)
     └── JoyCast.driver.dSYM     # Debug symbols for prod
 ```
 
@@ -184,6 +144,7 @@ This structure allows you to:
 - Keep both dev and prod builds simultaneously
 - Switch between versions quickly without rebuilding
 - Compare outputs between different configurations
+- Support both Intel and Apple Silicon Macs with single binary
 
 ## Build Script Options
 
@@ -195,16 +156,34 @@ This structure allows you to:
 
 **Flags:**
 - `--no-update` - Skip BlackHole submodule update
-- `--no-sign` - Build unsigned (for testing without certificates)
 - `--help` - Show usage information
 
 **Examples:**
 ```bash
 ./scripts/build_driver.sh dev                    # Dev build, latest BlackHole, signed
 ./scripts/build_driver.sh prod --no-update      # Prod build, current BlackHole, signed  
-./scripts/build_driver.sh dev --no-sign         # Dev build, unsigned (for testing)
-./scripts/build_driver.sh prod --no-sign --no-update  # Prod build, current, unsigned
 ```
+
+### Build Features
+
+- **Universal Binaries**: All builds support both Intel and Apple Silicon
+- **Reproducible Builds**: BlackHole commit SHA displayed for consistency
+- **Strict Validation**: Automatic checks for macOS, Xcode, and credentials
+- **Safe Builds**: Comprehensive error handling and cleanup
+
+## Installation Script Features
+
+### `./scripts/install_driver.sh [mode]`
+
+**Modes:**
+- `dev` - Install development driver
+- `prod` - Install production driver (default)
+
+**Features:**
+- **Automatic Backup**: Creates timestamped backups of existing drivers
+- **Signature Verification**: Verifies driver signature before installation
+- **Safe Installation**: Proper permissions and ownership setup
+- **CoreAudio Restart**: Automatic restart for immediate driver availability
 
 ## BlackHole Updates
 
@@ -233,81 +212,11 @@ git commit -m "Pin BlackHole to v0.6.2"
 2. **No Source Changes**: BlackHole source code is never modified
 3. **Compile-Time Customization**: All JoyCast branding applied during compilation
 4. **Automatic Cleanup**: Build script removes temporary files from submodule
-
-### JoyCast Customizations
-
-Applied at compile time via [BlackHole preprocessor definitions](https://github.com/ExistentialAudio/BlackHole):
-
-**Core Driver:**
-- `kDriver_Name`: "JoyCast" (prod) / "JoyCast Dev" (dev) 
-- `kPlugIn_BundleID`: com.joycast.virtualmic / com.joycast.virtualmic.dev
-- `kPlugIn_Icon`: "JoyCast.icns"
-
-**Primary Device:**
-- `kDevice_Name`: "JoyCast Virtual Microphone" / "JoyCast Dev Virtual Microphone"
-- `kDevice_IsHidden`: false (visible device)
-- `kDevice_HasInput`: true, `kDevice_HasOutput`: false
-
-**Mirror Device:** 
-- `kDevice2_Name`: "JoyCast Virtual Output" / "JoyCast Dev Virtual Output"  
-- `kDevice2_IsHidden`: true (hidden device)
-- `kDevice2_HasInput`: true, `kDevice2_HasOutput`: false
-
-**Audio Settings:**
-- `kNumber_Of_Channels`: 2
-- `kLatency_Frame_Size`: 0 (zero additional latency)
-- `kSampleRates`: "44100,48000"
+5. **Universal Compilation**: Single build creates both Intel and Apple Silicon binaries
 
 ## Compatibility
 
-- **Driver**: macOS 10.10+ (inherited from BlackHole)
+- **Runtime**: macOS 10.10+ (inherited from BlackHole)
 - **Build Environment**: macOS 10.13+ (Xcode requirement)
 - **Architecture**: Universal Binary (Intel + Apple Silicon)
-
-## Troubleshooting
-
-### ❓ "Only see one JoyCast device, expected two"
-**Fixed in latest version!** This was caused by driver name conflicts. Both dev and prod drivers now have unique names (`kDriver_Name`):
-- Production: `kDriver_Name="JoyCast"`
-- Development: `kDriver_Name="JoyCast Dev"`
-
-**Solution:** Rebuild and reinstall both drivers:
-```bash
-./scripts/build_driver.sh dev && ./scripts/install_driver.sh dev
-./scripts/build_driver.sh prod && ./scripts/install_driver.sh prod
-```
-
-### ❓ "Build fails with preprocessor errors"
-**Fixed in latest version!** Caused by improper escaping of driver names with spaces.
-
-**Symptoms:** Errors like `missing terminating '"' character`
-
-**Solution:** Update to latest version with improved string escaping in `generate_preprocessor_defs()`.
-
-### ❓ "Driver signature invalid"
-Ensure you have valid Developer ID Application certificate:
-```bash
-# Check available certificates
-security find-identity -v -p codesigning
-
-# Or build unsigned for testing
-./scripts/build_driver.sh dev --no-sign
-```
-
-### ❓ "macOS doesn't recognize driver"
-1. Check if driver is properly installed:
-   ```bash
-   ls -la /Library/Audio/Plug-Ins/HAL/ | grep -i joycast
-   ```
-2. Restart CoreAudio:
-   ```bash
-   sudo pkill coreaudiod
-   ```
-3. Verify in System Preferences > Sound > Input
-
-## License
-
-- **JoyCast code**: MIT License
-- **BlackHole**: GPL-3.0 License (separate submodule)
-
-This clean separation ensures license compliance while maintaining a professional development workflow.
+- **Code Signing**: Required for all builds

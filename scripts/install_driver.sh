@@ -1,72 +1,45 @@
-#!/bin/bash
+#!/usr/bin/env bash
+set -euo pipefail
+trap 'echo -e "\033[0;31m✖ Installation failed\033[0m"' ERR
 
 # JoyCast Driver Installation Script
 
-set -e
-
-# Colors
-GREEN='\033[0;32m'
-YELLOW='\033[0;33m'
-RED='\033[0;31m'
-NC='\033[0m'
+GREEN='\033[0;32m'; YELLOW='\033[0;33m'; RED='\033[0;31m'; NC='\033[0m'
 
 echo -e "${GREEN}=== JoyCast Driver Installation ===${NC}"
 
+# Environment checks
+[[ "$(uname)" == "Darwin" ]] || { echo "Only macOS supported"; exit 1; }
+
 # Check if we're in the right directory
-if [ ! -f "scripts/install_driver.sh" ]; then
-    echo -e "${RED}Error: Please run this script from the repository root${NC}"
-    exit 1
-fi
+[[ -f "scripts/install_driver.sh" ]] || { echo -e "${RED}Error: Please run this script from the repository root${NC}"; exit 1; }
 
-# Parse arguments
 MODE="${1:-prod}"
-if [ "$MODE" != "dev" ] && [ "$MODE" != "prod" ]; then
-    echo "Usage: $0 [dev|prod]"
-    echo "  dev  - Install development driver"
-    echo "  prod - Install production driver"
-    exit 1
-fi
+[[ "$MODE" =~ ^(dev|prod)$ ]] || { echo "Usage: $0 [dev|prod]"; exit 1; }
 
-# Load base configuration
-source "configs/driver.env"
+source "configs/driver.env" || { echo "configs/driver.env not found"; exit 1; }
 
-# Generate driver name and path based on mode
-if [ "$MODE" == "dev" ]; then
-    DRIVER_NAME="$BASE_NAME Dev"
-    DRIVER_PATH="build/dev/$DRIVER_NAME.driver"
-else
-    DRIVER_NAME="$BASE_NAME"
-    DRIVER_PATH="build/prod/$DRIVER_NAME.driver"
-fi
+DRIVER_NAME="$BASE_NAME"
+[[ "$MODE" == "dev" ]] && DRIVER_NAME+=" Dev"
+DRIVER_PATH="build/$MODE/$DRIVER_NAME.driver"
 INSTALL_PATH="/Library/Audio/Plug-Ins/HAL"
 
-# Check if driver is built
-if [ ! -d "$DRIVER_PATH" ]; then
-    echo -e "${RED}Error: Driver not found at $DRIVER_PATH${NC}"
-    echo "Please run: ./scripts/build_driver.sh $MODE"
-    exit 1
-fi
+[[ -d "$DRIVER_PATH" ]] || { echo -e "${RED}Driver not found: $DRIVER_PATH${NC}"; exit 1; }
 
-echo "Installing $DRIVER_NAME.driver..."
-echo "Source: $DRIVER_PATH"
-echo "Destination: $INSTALL_PATH"
+echo -e "${GREEN}Installing $DRIVER_NAME.driver → $INSTALL_PATH${NC}"
 
-# Check if we need sudo
-if [ -w "$INSTALL_PATH" ]; then
-    echo "Installing driver..."
-    cp -R "$DRIVER_PATH" "$INSTALL_PATH/"
-else
-    echo "Administrator privileges required for installation"
-    sudo cp -R "$DRIVER_PATH" "$INSTALL_PATH/"
-fi
+sudo install -d "$INSTALL_PATH"
+[[ -d "$INSTALL_PATH/$DRIVER_NAME.driver" ]] && \
+  sudo mv "$INSTALL_PATH/$DRIVER_NAME.driver" "$INSTALL_PATH/$DRIVER_NAME.driver.$(date +%Y%m%d%H%M%S).bak"
 
-# Set proper permissions
-echo "Setting permissions..."
+# Verify signature
+codesign --verify --deep --strict "$DRIVER_PATH"
+
+sudo cp -R "$DRIVER_PATH" "$INSTALL_PATH/"
 sudo chown -R root:wheel "$INSTALL_PATH/$DRIVER_NAME.driver"
 sudo chmod -R 755 "$INSTALL_PATH/$DRIVER_NAME.driver"
 
-echo "Restarting CoreAudio..."
+echo -e "${YELLOW}Restarting CoreAudio…${NC}"
 sudo killall -9 coreaudiod 2>/dev/null || true
-
-# Wait a moment for CoreAudio to restart
 sleep 2
+echo -e "${GREEN}✔ Done!${NC}"
