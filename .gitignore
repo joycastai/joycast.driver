@@ -1,5 +1,5 @@
 # Build outputs
-build/
+/build/
 
 # macOS
 .DS_Store
@@ -16,4 +16,4 @@ DerivedData/
 # Archives
 *.driver
 *.dmg
-*.pkg 
+*.pkg

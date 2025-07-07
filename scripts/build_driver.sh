@@ -21,18 +21,52 @@ fi
 
 # Check if BlackHole submodule exists
 if [ ! -d "external/blackhole" ]; then
-    echo -e "${RED}BlackHole submodule not found. Run: git submodule update --init${NC}"
-    exit 1
+    echo -e "${RED}BlackHole submodule not found. Initializing...${NC}"
+    git submodule update --init --recursive
+    if [ $? -ne 0 ]; then
+        echo -e "${RED}Failed to initialize submodule${NC}"
+        exit 1
+    fi
+fi
+
+# Update submodule to latest version (unless --no-update flag is provided)
+if [ "$NO_UPDATE" = false ]; then
+    echo -e "${YELLOW}Updating BlackHole submodule to latest version...${NC}"
+    git submodule update --remote external/blackhole
+    if [ $? -ne 0 ]; then
+        echo -e "${YELLOW}Warning: Failed to update submodule. Continuing with current version.${NC}"
+    else
+        echo -e "${GREEN}BlackHole submodule updated successfully${NC}"
+    fi
+else
+    echo -e "${YELLOW}Skipping submodule update (--no-update flag provided)${NC}"
 fi
 
 # Parse arguments
-MODE="${1:-prod}"
-if [ "$MODE" != "dev" ] && [ "$MODE" != "prod" ]; then
-    echo "Usage: $0 [dev|prod]"
-    echo "  dev  - Development build (unsigned)"
-    echo "  prod - Production build (signed)"
-    exit 1
-fi
+MODE=""
+NO_UPDATE=false
+
+# Parse all arguments
+for arg in "$@"; do
+    case $arg in
+        dev|prod)
+            MODE="$arg"
+            ;;
+        --no-update)
+            NO_UPDATE=true
+            ;;
+        *)
+            echo "Usage: $0 [dev|prod] [--no-update]"
+            echo "  dev        - Development build (unsigned)"
+            echo "  prod       - Production build (signed)"
+            echo "  --no-update - Skip BlackHole submodule update"
+            exit 1
+            ;;
+    esac
+done
+
+# Set default mode if not specified
+MODE="${MODE:-prod}"
 
 # Load utilities
 source configs/build_utils.sh
