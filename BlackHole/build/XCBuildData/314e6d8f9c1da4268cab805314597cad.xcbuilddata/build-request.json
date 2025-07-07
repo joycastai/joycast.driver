@@ -1,0 +1,50 @@
+{
+  "buildCommand" : {
+    "command" : "build",
+    "skipDependencies" : false,
+    "style" : "buildAndRun"
+  },
+  "configuredTargets" : [
+    {
+      "guid" : "e6f6a41ed081da888a86742289947deb6f47ea13fcc7f5e80e641ff11dbe4543"
+    }
+  ],
+  "containerPath" : "/Users/yankovich/Github/joycast.driver.clean/BlackHole/BlackHole.xcodeproj",
+  "continueBuildingAfterErrors" : false,
+  "dependencyScope" : "workspace",
+  "enableIndexBuildArena" : false,
+  "hideShellScriptEnvironment" : false,
+  "parameters" : {
+    "action" : "build",
+    "configurationName" : "Release",
+    "overrides" : {
+      "commandLine" : {
+        "table" : {
+          "CODE_SIGN_IDENTITY" : "",
+          "CODE_SIGN_STYLE" : "Manual",
+          "DEVELOPMENT_TEAM" : "XXXXXXXXXX",
+          "ENABLE_HARDENED_RUNTIME" : "YES",
+          "GCC_PREPROCESSOR_DEFINITIONS" : "$GCC_PREPROCESSOR_DEFINITIONS kDriver_Name=\\\"JoyCast\\\" kPlugIn_BundleID=\\\"com.joycast.virtualmic.dev\\\" kPlugIn_Icon=\\\"JoyCast.icns\\\" kManufacturer_Name=\\\"JoyCast\\ Gang\\\" kDevice_Name=\\\"JoyCast\\ Dev\\ Virtual\\ Microphone\\\" kDevice2_Name=\\\"JoyCast\\ Dev\\ Virtual\\ Output\\\" kBox_UID=\\\"JoyCastDEV_UID\\\" kDevice_UID=\\\"JoyCast_Dev_Virtual_Microphone_UID\\\" kDevice2_UID=\\\"JoyCast_Dev_Virtual_Microphone_2_UID\\\" kHas_Driver_Name_Format=false kNumber_Of_Channels=2 kDevice_HasInput=true kDevice_HasOutput=false kDevice2_HasInput=true kDevice2_HasOutput=false kDevice_IsHidden=false kDevice2_IsHidden=true",
+          "MACOSX_DEPLOYMENT_TARGET" : "10.13",
+          "MARKETING_VERSION" : "0.6.1 ",
+          "PRODUCT_BUNDLE_IDENTIFIER" : "com.joycast.virtualmic.dev",
+          "PRODUCT_NAME" : "JoyCast Dev"
+        }
+      },
+      "synthesized" : {
+        "table" : {
+          "ACTION" : "build",
+          "COLOR_DIAGNOSTICS" : "YES",
+          "diagnostic_message_length" : "108",
+          "ENABLE_PREVIEWS" : "NO",
+          "ENABLE_XOJIT_PREVIEWS" : "NO"
+        }
+      }
+    }
+  },
+  "showNonLoggedProgress" : true,
+  "useDryRun" : false,
+  "useImplicitDependencies" : false,
+  "useLegacyBuildLocations" : false,
+  "useParallelTargets" : false
+}
