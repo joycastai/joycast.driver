@@ -6,14 +6,13 @@ JoyCast is a virtual audio driver for macOS based on BlackHole, designed to prov
 
 This project uses a clean architecture approach:
 
-- **BlackHole** (submodule) - Core audio driver functionality (GPL-3.0 licensed)
-- **JoyCast** (this repo) - Configuration, customizations, and build tooling (MIT licensed)
+- **BlackHole** (submodule) - Core audio driver functionality (GPL-3.0 licensed).
+- **JoyCast** (this repo) - Configuration, customizations, and build tooling.
 
 ### Why Submodule Approach?
 
 - ✅ **Clean separation** - BlackHole code remains untouched
 - ✅ **Easy updates** - Simple `git submodule update` to get latest BlackHole
-- ✅ **Clear licensing** - GPL for BlackHole, MIT for JoyCast additions
 - ✅ **Reduced conflicts** - No merging upstream changes
 - ✅ **Professional structure** - Clear separation of concerns
 
@@ -113,20 +112,3 @@ JoyCast customizations are applied via preprocessor definitions at build time:
 - Device names: "JoyCast Virtual Microphone"
 
 All customizations are defined in config files - no BlackHole source code is modified.
-
-## Licensing
-
-- **JoyCast components**: MIT License (see [LICENSE](LICENSE))
-- **BlackHole submodule**: GPL-3.0 License (see [BlackHole/LICENSE](BlackHole/LICENSE))
-
-The final driver binary includes both components and is subject to GPL-3.0 due to BlackHole inclusion.
-
-## Credits
-
-- Based on [BlackHole](https://github.com/ExistentialAudio/BlackHole) by Existential Audio Inc.
-- JoyCast customizations by JoyCast Gang
-
-## Support
-
-For JoyCast-specific issues, please open an issue in this repository.
-For BlackHole-related issues, refer to the [upstream repository](https://github.com/ExistentialAudio/BlackHole). 
