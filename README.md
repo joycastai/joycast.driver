@@ -57,7 +57,7 @@ cd joycast.driver
 
 ## Configuration
 
-**Single configuration file**: `configs/config.env`
+**Single configuration file**: `configs/driver.env`
 
 Contains all [BlackHole customization parameters](https://github.com/ExistentialAudio/BlackHole):
 
@@ -87,27 +87,27 @@ The build script automatically generates dev/prod differences:
 
 **High-resolution audio support:**
 ```bash
-# Edit configs/config.env
+# Edit configs/driver.env
 SAMPLE_RATES="44100,48000,88200,96000,176400,192000"
 ```
 
 **Multi-channel setup (16 channels):**
 ```bash
-# Edit configs/config.env  
+# Edit configs/driver.env  
 NUMBER_OF_CHANNELS=16
 LATENCY_FRAME_SIZE=512  # Higher latency for stability
 ```
 
 **Custom device visibility:**
 ```bash
-# Edit configs/config.env
+# Edit configs/driver.env
 DEVICE_IS_HIDDEN=false      # Primary device visible
 DEVICE2_IS_HIDDEN=false     # Mirror device also visible  
 ```
 
 **Separate input/output devices:**
 ```bash
-# Edit configs/config.env
+# Edit configs/driver.env
 DEVICE_HAS_INPUT=true       # Primary: input only
 DEVICE_HAS_OUTPUT=false
 DEVICE2_HAS_INPUT=false     # Mirror: output only  
@@ -131,7 +131,7 @@ export APPLE_TEAM_ID="XXXXXXXXXX"
 joycast.driver/
 ├── external/blackhole/  # Git submodule (always clean)
 ├── configs/
-│   └── config.env       # Single configuration file
+│   └── driver.env       # Single configuration file
 ├── scripts/
 │   ├── build_driver.sh  # Self-contained build script
 │   └── install_driver.sh

@@ -17,3 +17,4 @@ DerivedData/
 *.driver
 *.dmg
 *.pkg
+configs/credentials.env

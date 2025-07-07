@@ -96,16 +96,10 @@ generate_preprocessor_defs() {
     echo "kDriver_Name=\\\"JoyCast\\\" kPlugIn_BundleID=\\\"$BUNDLE_ID\\\" kPlugIn_Icon=\\\"$PLUGIN_ICON\\\" kManufacturer_Name=\\\"$safe_manufacturer_name\\\" kDevice_Name=\\\"$safe_device_name\\\" kDevice_IsHidden=$DEVICE_IS_HIDDEN kDevice_HasInput=$DEVICE_HAS_INPUT kDevice_HasOutput=$DEVICE_HAS_OUTPUT kDevice2_Name=\\\"$safe_device2_name\\\" kDevice2_IsHidden=$DEVICE2_IS_HIDDEN kDevice2_HasInput=$DEVICE2_HAS_INPUT kDevice2_HasOutput=$DEVICE2_HAS_OUTPUT kBox_UID=\\\"$BOX_UID\\\" kDevice_UID=\\\"$DEVICE_UID\\\" kDevice2_UID=\\\"$DEVICE2_UID\\\" kLatency_Frame_Size=$LATENCY_FRAME_SIZE kNumber_Of_Channels=$NUMBER_OF_CHANNELS kSampleRates='$SAMPLE_RATES'"
 }
 
-get_blackhole_version() {
-    if [ -d "external/blackhole/.git" ]; then
-        (cd external/blackhole && git describe --tags 2>/dev/null || git rev-parse --short HEAD)
-    else
-        echo "unknown"
-    fi
-}
+
 
 # Load base configuration
-CONFIG_FILE="configs/config.env"
+CONFIG_FILE="configs/driver.env"
 echo "Loading configuration: $CONFIG_FILE"
 
 if [ ! -f "$CONFIG_FILE" ]; then
@@ -115,6 +109,15 @@ fi
 
 # Source the base configuration
 source "$CONFIG_FILE"
+
+# Load code signing credentials if available
+CREDENTIALS_FILE="configs/credentials.env"
+if [ -f "$CREDENTIALS_FILE" ]; then
+    echo "Loading credentials: $CREDENTIALS_FILE"
+    source "$CREDENTIALS_FILE"
+else
+    echo -e "${YELLOW}Warning: $CREDENTIALS_FILE not found. Code signing may fail.${NC}"
+fi
 
 # Generate dev/prod specific variables
 if [ "$MODE" == "dev" ]; then
@@ -140,6 +143,10 @@ fi
 # Set audio parameters from config (same for dev/prod)
 # These correspond directly to BlackHole customization parameters
 
+# Map credentials to build variables
+DEVELOPMENT_TEAM="$APPLE_TEAM_ID"
+CODE_SIGN_IDENTITY="$CODE_SIGN_CERT_NAME"
+
 # Code signing logic (same for both dev and prod)
 if [ "$NO_SIGN" = true ]; then
     FINAL_CODE_SIGN_IDENTITY=""
@@ -149,13 +156,7 @@ else
     echo "Build mode: $MODE (signed)"
 fi
 
-# Get versions
-BLACKHOLE_VERSION=$(get_blackhole_version)
-JOYCAST_VERSION="0.6.1"
-
 echo "Build mode: $MODE"
-echo "BlackHole version: $BLACKHOLE_VERSION"
-echo "JoyCast version: $JOYCAST_VERSION"
 echo "Driver: $DRIVER_NAME.driver"
 
 # Generate preprocessor definitions
@@ -179,7 +180,6 @@ BUILD_ARGS=(
     -target BlackHole
     PRODUCT_BUNDLE_IDENTIFIER="$BUNDLE_ID"
     PRODUCT_NAME="$DRIVER_NAME"
-    MARKETING_VERSION="$JOYCAST_VERSION"
     DEVELOPMENT_TEAM="$DEVELOPMENT_TEAM"
     ENABLE_HARDENED_RUNTIME=YES
     CONFIGURATION_BUILD_DIR="$(pwd)/build/$MODE"
@@ -250,8 +250,6 @@ rm -rf external/blackhole/build/
 
 echo -e "${GREEN}=== Build Complete ===${NC}"
 echo "Driver location: $DRIVER_PATH"
-echo "BlackHole version: $BLACKHOLE_VERSION"
-echo "JoyCast version: $JOYCAST_VERSION"
 
 # Verify the build
 if codesign -v "$DRIVER_PATH" 2>/dev/null; then
