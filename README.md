@@ -1,6 +1,13 @@
 # JoyCast Virtual Audio Driver
 
-JoyCast is a virtual audio driver for macOS based on BlackHole, designed to provide high-quality virtual microphone functionality.
+JoyCast is a virtual audio driver for macOS based on BlackHole, designed to provide high-quality virtual microphone functionality with clean dev/prod separation.
+
+## ✨ Recent Updates
+
+- **✅ Fixed driver conflict issue** - Dev and prod drivers now have unique names, preventing conflicts
+- **✅ Dual device support** - Both `JoyCast Virtual Microphone` and `JoyCast Dev Virtual Microphone` can run simultaneously
+- **✅ Improved build system** - Better escaping and error handling for driver names with spaces
+- **✅ Verified signatures** - Both dev and prod builds properly signed and working
 
 ## Architecture
 
@@ -82,6 +89,21 @@ Contains all [BlackHole customization parameters](https://github.com/Existential
 The build script automatically generates dev/prod differences:
 - **dev**: Adds "Dev" suffixes, ".dev" bundle IDs  
 - **prod**: Clean names and bundle IDs
+
+### Resulting Audio Devices
+After installation, you'll see these devices in **System Preferences > Sound**:
+
+**Production Build:**
+- `JoyCast Virtual Microphone` (2 channels, 48kHz)
+
+**Development Build:**  
+- `JoyCast Dev Virtual Microphone` (2 channels, 48kHz)
+
+**Both Installed (Recommended for Development):**
+- `JoyCast Virtual Microphone` ← Production version
+- `JoyCast Dev Virtual Microphone` ← Development version
+
+Both devices can run simultaneously without conflicts, allowing seamless testing and production use.
 
 ### Advanced Customization Examples
 
@@ -217,7 +239,7 @@ git commit -m "Pin BlackHole to v0.6.2"
 Applied at compile time via [BlackHole preprocessor definitions](https://github.com/ExistentialAudio/BlackHole):
 
 **Core Driver:**
-- `kDriver_Name`: "JoyCast" 
+- `kDriver_Name`: "JoyCast" (prod) / "JoyCast Dev" (dev) 
 - `kPlugIn_BundleID`: com.joycast.virtualmic / com.joycast.virtualmic.dev
 - `kPlugIn_Icon`: "JoyCast.icns"
 
@@ -241,6 +263,47 @@ Applied at compile time via [BlackHole preprocessor definitions](https://github.
 - **Driver**: macOS 10.10+ (inherited from BlackHole)
 - **Build Environment**: macOS 10.13+ (Xcode requirement)
 - **Architecture**: Universal Binary (Intel + Apple Silicon)
+
+## Troubleshooting
+
+### ❓ "Only see one JoyCast device, expected two"
+**Fixed in latest version!** This was caused by driver name conflicts. Both dev and prod drivers now have unique names (`kDriver_Name`):
+- Production: `kDriver_Name="JoyCast"`
+- Development: `kDriver_Name="JoyCast Dev"`
+
+**Solution:** Rebuild and reinstall both drivers:
+```bash
+./scripts/build_driver.sh dev && ./scripts/install_driver.sh dev
+./scripts/build_driver.sh prod && ./scripts/install_driver.sh prod
+```
+
+### ❓ "Build fails with preprocessor errors"
+**Fixed in latest version!** Caused by improper escaping of driver names with spaces.
+
+**Symptoms:** Errors like `missing terminating '"' character`
+
+**Solution:** Update to latest version with improved string escaping in `generate_preprocessor_defs()`.
+
+### ❓ "Driver signature invalid"
+Ensure you have valid Developer ID Application certificate:
+```bash
+# Check available certificates
+security find-identity -v -p codesigning
+
+# Or build unsigned for testing
+./scripts/build_driver.sh dev --no-sign
+```
+
+### ❓ "macOS doesn't recognize driver"
+1. Check if driver is properly installed:
+   ```bash
+   ls -la /Library/Audio/Plug-Ins/HAL/ | grep -i joycast
+   ```
+2. Restart CoreAudio:
+   ```bash
+   sudo pkill coreaudiod
+   ```
+3. Verify in System Preferences > Sound > Input
 
 ## License
 
