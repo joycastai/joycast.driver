@@ -122,10 +122,10 @@ fi
 
 # Code signing logic (same for both dev and prod)
 if [ "$NO_SIGN" = true ]; then
-    CODE_SIGN_IDENTITY=""
+    FINAL_CODE_SIGN_IDENTITY=""
     echo "Build mode: $MODE (unsigned)"
 else
-    CODE_SIGN_IDENTITY="$PROD_CODE_SIGN_IDENTITY"
+    FINAL_CODE_SIGN_IDENTITY="$CODE_SIGN_IDENTITY"
     echo "Build mode: $MODE (signed)"
 fi
 
@@ -167,10 +167,10 @@ BUILD_ARGS=(
 )
 
 # Add code signing configuration
-if [ -n "$CODE_SIGN_IDENTITY" ]; then
-    BUILD_ARGS+=(CODE_SIGN_IDENTITY="$CODE_SIGN_IDENTITY")
+if [ -n "$FINAL_CODE_SIGN_IDENTITY" ]; then
+    BUILD_ARGS+=(CODE_SIGN_IDENTITY="$FINAL_CODE_SIGN_IDENTITY")
     BUILD_ARGS+=(CODE_SIGN_STYLE="Manual")
-    echo "Will sign with: $CODE_SIGN_IDENTITY"
+    echo "Will sign with: $FINAL_CODE_SIGN_IDENTITY"
 else
     BUILD_ARGS+=(CODE_SIGN_IDENTITY="")
     BUILD_ARGS+=(CODE_SIGN_STYLE="Manual")
@@ -216,9 +216,9 @@ if [ -f "LICENSE" ]; then
 fi
 
 # Final signing
-if [ -n "$CODE_SIGN_IDENTITY" ]; then
+if [ -n "$FINAL_CODE_SIGN_IDENTITY" ]; then
     echo -e "${YELLOW}Final code signing...${NC}"
-    codesign --force --sign "$CODE_SIGN_IDENTITY" \
+    codesign --force --sign "$FINAL_CODE_SIGN_IDENTITY" \
              --options=runtime \
              --timestamp \
              "$DRIVER_PATH"
