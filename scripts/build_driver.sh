@@ -84,8 +84,24 @@ else
     echo -e "${YELLOW}Skipping submodule update (--no-update flag provided)${NC}"
 fi
 
-# Load utilities
-source configs/build_utils.sh
+# Utility functions
+generate_preprocessor_defs() {
+    # Escape spaces for shell safety
+    local safe_device_name="${DEVICE_NAME// /\\ }"
+    local safe_manufacturer_name="${MANUFACTURER_NAME// /\\ }"
+    local safe_device2_name="${DEVICE2_NAME// /\\ }"
+    
+    # Generate the preprocessor definitions string
+    echo "kDriver_Name=\\\"JoyCast\\\" kPlugIn_BundleID=\\\"$BUNDLE_ID\\\" kPlugIn_Icon=\\\"JoyCast.icns\\\" kManufacturer_Name=\\\"$safe_manufacturer_name\\\" kDevice_Name=\\\"$safe_device_name\\\" kDevice2_Name=\\\"$safe_device2_name\\\" kBox_UID=\\\"$BOX_UID\\\" kDevice_UID=\\\"$DEVICE_UID\\\" kDevice2_UID=\\\"$DEVICE2_UID\\\" kHas_Driver_Name_Format=false kNumber_Of_Channels=$NUMBER_OF_CHANNELS kDevice_HasInput=$DEVICE_HAS_INPUT kDevice_HasOutput=$DEVICE_HAS_OUTPUT kDevice2_HasInput=$DEVICE2_HAS_INPUT kDevice2_HasOutput=$DEVICE2_HAS_OUTPUT kDevice_IsHidden=$DEVICE_IS_HIDDEN kDevice2_IsHidden=$DEVICE2_IS_HIDDEN"
+}
+
+get_blackhole_version() {
+    if [ -d "external/blackhole/.git" ]; then
+        (cd external/blackhole && git describe --tags 2>/dev/null || git rev-parse --short HEAD)
+    else
+        echo "unknown"
+    fi
+}
 
 # Load base configuration
 CONFIG_FILE="configs/config.env"

@@ -78,10 +78,9 @@ export APPLE_TEAM_ID="XXXXXXXXXX"
 joycast.driver/
 ├── external/blackhole/  # Git submodule (always clean)
 ├── configs/
-│   ├── config.env       # Single configuration file
-│   └── build_utils.sh   # Build utilities
+│   └── config.env       # Single configuration file
 ├── scripts/
-│   ├── build_driver.sh  # Smart build script with flags
+│   ├── build_driver.sh  # Smart build script with all utilities
 │   └── install_driver.sh
 ├── assets/
 │   └── JoyCast.icns     # Custom icon
