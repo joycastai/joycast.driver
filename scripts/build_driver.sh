@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# JoyCast Driver Build Script (Submodule Approach)
+# JoyCast Driver Build Script (Clean Architecture)
 # Builds JoyCast driver using BlackHole submodule with JoyCast configurations
 
 set -e
@@ -20,7 +20,7 @@ if [ ! -f "scripts/build_driver.sh" ]; then
 fi
 
 # Check if BlackHole submodule exists
-if [ ! -d "BlackHole" ]; then
+if [ ! -d "external/blackhole" ]; then
     echo -e "${RED}BlackHole submodule not found. Run: git submodule update --init${NC}"
     exit 1
 fi
@@ -69,16 +69,12 @@ echo "Cleaning previous builds..."
 rm -rf build/
 mkdir -p build/
 
-# Build in BlackHole directory
+# Build using BlackHole project but output to our build directory
 echo -e "${YELLOW}Building driver...${NC}"
-cd BlackHole
-
-# Clean BlackHole build directory
-rm -rf build/
 
 # Prepare build arguments
 BUILD_ARGS=(
-    -project BlackHole.xcodeproj
+    -project external/blackhole/BlackHole.xcodeproj
     -configuration Release
     -target BlackHole
     PRODUCT_BUNDLE_IDENTIFIER="$BUNDLE_ID"
@@ -87,6 +83,7 @@ BUILD_ARGS=(
     DEVELOPMENT_TEAM="$DEVELOPMENT_TEAM"
     MACOSX_DEPLOYMENT_TARGET="$MACOSX_DEPLOYMENT_TARGET"
     ENABLE_HARDENED_RUNTIME=YES
+    CONFIGURATION_BUILD_DIR="$(pwd)/build"
 )
 
 # Add code signing configuration
@@ -107,21 +104,17 @@ xcodebuild \
 
 echo -e "${GREEN}Build completed!${NC}"
 
-# Return to parent directory
-cd ..
-
-# Copy result to our build directory
-DRIVER_PATH="BlackHole/build/Release/$DRIVER_NAME.driver"
+# Check if driver was created
+DRIVER_PATH="build/$DRIVER_NAME.driver"
 if [ ! -d "$DRIVER_PATH" ]; then
     echo -e "${RED}Error: Built driver not found at $DRIVER_PATH${NC}"
     exit 1
 fi
 
-echo "Copying driver to build directory..."
-cp -R "$DRIVER_PATH" build/
+echo "Driver built successfully at: $DRIVER_PATH"
 
 # Add JoyCast-specific resources
-RESOURCES_PATH="build/$DRIVER_NAME.driver/Contents/Resources"
+RESOURCES_PATH="$DRIVER_PATH/Contents/Resources"
 
 # Copy JoyCast icon
 if [ -f "assets/JoyCast.icns" ]; then
@@ -132,8 +125,8 @@ else
 fi
 
 # Add license files for GPL compliance
-if [ -f "BlackHole/LICENSE" ]; then
-    cp "BlackHole/LICENSE" "$RESOURCES_PATH/BLACKHOLE_LICENSE"
+if [ -f "external/blackhole/LICENSE" ]; then
+    cp "external/blackhole/LICENSE" "$RESOURCES_PATH/BLACKHOLE_LICENSE"
     echo "BlackHole LICENSE copied"
 fi
 
@@ -148,17 +141,17 @@ if [ "$MODE" == "prod" ] && [ -n "$CODE_SIGN_IDENTITY" ]; then
     codesign --force --sign "$CODE_SIGN_IDENTITY" \
              --options=runtime \
              --timestamp \
-             "build/$DRIVER_NAME.driver"
+             "$DRIVER_PATH"
     echo -e "${GREEN}Driver signed successfully${NC}"
 fi
 
 echo -e "${GREEN}=== Build Complete ===${NC}"
-echo "Driver location: build/$DRIVER_NAME.driver"
+echo "Driver location: $DRIVER_PATH"
 echo "BlackHole version: $BLACKHOLE_VERSION"
 echo "JoyCast version: $JOYCAST_VERSION"
 
 # Verify the build
-if codesign -v "build/$DRIVER_NAME.driver" 2>/dev/null; then
+if codesign -v "$DRIVER_PATH" 2>/dev/null; then
     echo -e "${GREEN}✓ Code signature valid${NC}"
 else
     echo -e "${YELLOW}! Driver is unsigned${NC}"

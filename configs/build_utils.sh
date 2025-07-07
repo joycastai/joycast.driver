@@ -54,10 +54,8 @@ validate_config() {
 
 # Function to get BlackHole version
 get_blackhole_version() {
-    if [ -d "BlackHole/.git" ]; then
-        cd BlackHole
-        git describe --tags 2>/dev/null || git rev-parse --short HEAD
-        cd ..
+    if [ -d "external/blackhole/.git" ]; then
+        (cd external/blackhole && git describe --tags 2>/dev/null || git rev-parse --short HEAD)
     else
         echo "unknown"
     fi

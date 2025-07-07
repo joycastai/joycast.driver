@@ -1,0 +1,19 @@
+# Build outputs
+build/
+
+# macOS
+.DS_Store
+
+# Xcode
+*.xcworkspace/
+DerivedData/
+*.xcuserdata*
+
+# IDE
+.vscode/
+.idea/
+
+# Archives
+*.driver
+*.dmg
+*.pkg 
