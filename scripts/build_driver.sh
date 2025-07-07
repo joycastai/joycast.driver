@@ -230,15 +230,16 @@ else
     echo -e "${YELLOW}Warning: $PLUGIN_ICON not found in assets/${NC}"
 fi
 
-# Add license files for GPL compliance
-if [[ -f "external/blackhole/LICENSE" ]]; then
-    cp "external/blackhole/LICENSE" "$RESOURCES_PATH/BLACKHOLE_LICENSE"
-    echo "BlackHole LICENSE copied"
+# Replace license with JoyCast license
+if [[ -f "LICENSE" ]]; then
+    cp "LICENSE" "$RESOURCES_PATH/LICENSE"
+    echo "JoyCast LICENSE installed"
 fi
 
-if [[ -f "LICENSE" ]]; then
-    cp "LICENSE" "$RESOURCES_PATH/JOYCAST_LICENSE"
-    echo "JoyCast LICENSE copied"
+# Remove BlackHole icon
+if [[ -f "$RESOURCES_PATH/BlackHole.icns" ]]; then
+    rm -f "$RESOURCES_PATH/BlackHole.icns"
+    echo "BlackHole icon removed"
 fi
 
 # Final signing
