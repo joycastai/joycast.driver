@@ -108,7 +108,7 @@ generate_preprocessor_defs() {
     
     # Generate comprehensive preprocessor definitions string
     # Based on BlackHole customization parameters: https://github.com/ExistentialAudio/BlackHole
-    echo "kDriver_Name=\\\"$safe_driver_name\\\" kPlugIn_BundleID=\\\"$BUNDLE_ID\\\" kPlugIn_Icon=\\\"$PLUGIN_ICON\\\" kManufacturer_Name=\\\"$safe_manufacturer_name\\\" kDevice_Name=\\\"$safe_device_name\\\" kDevice_IsHidden=$DEVICE_IS_HIDDEN kDevice_HasInput=$DEVICE_HAS_INPUT kDevice_HasOutput=$DEVICE_HAS_OUTPUT kDevice2_Name=\\\"$safe_device2_name\\\" kDevice2_IsHidden=$DEVICE2_IS_HIDDEN kDevice2_HasInput=$DEVICE2_HAS_INPUT kDevice2_HasOutput=$DEVICE2_HAS_OUTPUT kBox_UID=\\\"$BOX_UID\\\" kDevice_UID=\\\"$DEVICE_UID\\\" kDevice2_UID=\\\"$DEVICE2_UID\\\" kLatency_Frame_Size=$LATENCY_FRAME_SIZE kNumber_Of_Channels=$NUMBER_OF_CHANNELS kSampleRates='$SAMPLE_RATES'"
+    echo "kDriver_Name=\\\"$safe_driver_name\\\" kPlugIn_BundleID=\\\"$BUNDLE_ID\\\" kPlugIn_Icon=\\\"$PLUGIN_ICON\\\" kManufacturer_Name=\\\"$safe_manufacturer_name\\\" kDevice_Name=\\\"$safe_device_name\\\" kDevice_IsHidden=$DEVICE_IS_HIDDEN kDevice_HasInput=$DEVICE_HAS_INPUT kDevice_HasOutput=$DEVICE_HAS_OUTPUT kDevice2_Name=\\\"$safe_device2_name\\\" kDevice2_IsHidden=$DEVICE2_IS_HIDDEN kDevice2_HasInput=$DEVICE2_HAS_INPUT kDevice2_HasOutput=$DEVICE2_HAS_OUTPUT kBox_UID=\\\"$BOX_UID\\\" kLatency_Frame_Size=$LATENCY_FRAME_SIZE kNumber_Of_Channels=$NUMBER_OF_CHANNELS kSampleRates='$SAMPLE_RATES'"
 }
 
 # Load base configuration
@@ -139,20 +139,13 @@ if [[ "$MODE" == "dev" ]]; then
     DEVICE_NAME="$DEV_DEVICE_NAME_PATTERN"
     DEVICE2_NAME="$DEV_DEVICE2_NAME_PATTERN"
     BOX_UID="$DEV_BOX_UID_PATTERN"
-    DEVICE_UID="$DEV_DEVICE_UID_PATTERN"
-    DEVICE2_UID="$DEV_DEVICE2_UID_PATTERN"
 else
     DRIVER_NAME="$BASE_NAME$PROD_NAME_SUFFIX"
     BUNDLE_ID="$BASE_BUNDLE_ID$PROD_BUNDLE_SUFFIX"
     DEVICE_NAME="$PROD_DEVICE_NAME_PATTERN"
     DEVICE2_NAME="$PROD_DEVICE2_NAME_PATTERN"
     BOX_UID="$PROD_BOX_UID_PATTERN"
-    DEVICE_UID="$PROD_DEVICE_UID_PATTERN"
-    DEVICE2_UID="$PROD_DEVICE2_UID_PATTERN"
 fi
-
-# Set audio parameters from config (same for dev/prod)
-# These correspond directly to BlackHole customization parameters
 
 # Map credentials to build variables
 DEVELOPMENT_TEAM="$APPLE_TEAM_ID"
