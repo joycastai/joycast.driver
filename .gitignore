@@ -1,6 +1,3 @@
-# Build outputs
-build/
-
 # macOS
 .DS_Store
 
@@ -13,8 +10,17 @@ DerivedData/
 .vscode/
 .idea/
 
-# Archives
+# Archives (but not in releases/)
 *.driver
+!releases/**/*.driver
 *.dmg
 *.pkg
+
+# Credentials
 configs/credentials.env
+
+# Build outputs
+build/
+
+# Releases are tracked
+!releases/
