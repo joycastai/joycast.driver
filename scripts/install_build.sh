@@ -12,7 +12,7 @@ echo -e "${GREEN}=== JoyCast Driver Installation ===${NC}"
 [[ "$(uname)" == "Darwin" ]] || { echo "Only macOS supported"; exit 1; }
 
 # Check if we're in the right directory
-[[ -f "scripts/install_driver.sh" ]] || { echo -e "${RED}Error: Please run this script from the repository root${NC}"; exit 1; }
+[[ -f "scripts/install_build.sh" ]] || { echo -e "${RED}Error: Please run this script from the repository root${NC}"; exit 1; }
 
 MODE="${1:-prod}"
 [[ "$MODE" =~ ^(dev|prod)$ ]] || { echo "Usage: $0 [dev|prod]"; exit 1; }
@@ -21,7 +21,7 @@ source "configs/driver.env" || { echo "configs/driver.env not found"; exit 1; }
 
 DRIVER_NAME="$BASE_NAME"
 [[ "$MODE" == "dev" ]] && DRIVER_NAME+=" Dev"
-DRIVER_PATH="build/$MODE/$DRIVER_NAME.driver"
+DRIVER_PATH="build/$DRIVER_NAME.driver"
 INSTALL_PATH="/Library/Audio/Plug-Ins/HAL"
 
 [[ -d "$DRIVER_PATH" ]] || { echo -e "${RED}Driver not found: $DRIVER_PATH${NC}"; exit 1; }

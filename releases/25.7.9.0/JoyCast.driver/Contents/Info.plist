@@ -7,17 +7,17 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>English</string>
 	<key>CFBundleExecutable</key>
-	<string>JoyCast Dev</string>
+	<string>JoyCast</string>
 	<key>CFBundleIdentifier</key>
-	<string>com.joycast.virtualmic.dev</string>
+	<string>com.joycast.virtualmic</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>JoyCast Dev</string>
+	<string>JoyCast</string>
 	<key>CFBundlePackageType</key>
 	<string>BNDL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>0.6.1</string>
+	<string>25.7.9.0</string>
 	<key>CFBundleSignature</key>
 	<string>????</string>
 	<key>CFBundleSupportedPlatforms</key>
