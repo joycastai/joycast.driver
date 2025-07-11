@@ -14,16 +14,17 @@ echo -e "${GREEN}=== JoyCast Driver Installation ===${NC}"
 # Check if we're in the right directory
 [[ -f "scripts/install_build.sh" ]] || { echo -e "${RED}Error: Please run this script from the repository root${NC}"; exit 1; }
 
-MODE="${1:-prod}"
+MODE="${1:-}"
+[[ -n "$MODE" ]] || { echo "Usage: $0 [dev|prod]"; exit 1; }
 [[ "$MODE" =~ ^(dev|prod)$ ]] || { echo "Usage: $0 [dev|prod]"; exit 1; }
 
-# Find driver in build directory
-[[ -d "build" ]] || { echo -e "${RED}Build directory not found${NC}"; exit 1; }
+# Find driver in dist/build directory
+[[ -d "dist/build" ]] || { echo -e "${RED}Build directory not found${NC}"; exit 1; }
 
 if [[ "$MODE" == "dev" ]]; then
-    DRIVER_PATH=$(find build -maxdepth 1 -name "*Dev*.driver" | head -1)
+    DRIVER_PATH=$(find dist/build -maxdepth 1 -name "*Dev*.driver" | head -1)
 else
-    DRIVER_PATH=$(find build -maxdepth 1 -name "*.driver" ! -name "*Dev*.driver" | head -1)
+    DRIVER_PATH=$(find dist/build -maxdepth 1 -name "*.driver" ! -name "*Dev*.driver" | head -1)
 fi
 
 [[ -n "$DRIVER_PATH" ]] || { echo -e "${RED}No $MODE driver found in build directory${NC}"; exit 1; }
