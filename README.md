@@ -58,11 +58,14 @@ joycast.driver/
 │   ├── driver.env       # Single configuration file
 │   └── credentials.env  # Code signing credentials
 ├── scripts/
-│   ├── build.sh         # Self-contained build script
+│   ├── build.sh                # Self-contained build script
+│   ├── build_to_candidate.sh   # Release candidate builder (PKG creation)
 │   └── install_driver.sh
 ├── assets/
 │   └── joycast.icns     # Custom icon
-├── dist/build/          # Build outputs (gitignored)
+├── dist/
+│   ├── build/           # Build outputs (gitignored)
+│   └── candidate/       # Release candidates by version (gitignored)
 ├── LICENSE              
 └── README.md
 ```
@@ -100,6 +103,50 @@ This structure allows you to:
 ./scripts/build.sh --no-update                  # Build with current BlackHole version
 ./scripts/build.sh --debug                      # Build with debug symbols
 ```
+
+## Release Candidate Builder
+
+### `./scripts/build_to_candidate.sh [flags]`
+
+Creates signed and notarized PKG installers for distribution. Always builds both dev and prod versions.
+
+**Flags:**
+- `--skip-build` - Skip driver build, use existing drivers (development only)
+- `--help` - Show usage information
+
+**Examples:**
+```bash
+./scripts/build_to_candidate.sh                 # Clean build and create PKG candidates (recommended)
+./scripts/build_to_candidate.sh --skip-build    # Use existing drivers (development/testing only)
+```
+
+**Best Practices:**
+- **Always commit changes** before creating release candidates
+- **Use clean builds** (default behavior) for production releases
+- `--skip-build` flag only for development/testing
+- Release info includes Git commit hash for traceability
+- Script checks for uncommitted changes and warns appropriately
+
+### Release Candidate Output
+
+Release candidates are stored in a single directory per version:
+
+```
+dist/candidate/
+└── 25.7.11.0/
+    ├── JoyCast_Driver-25.7.11.0.pkg          # Production PKG (signed & notarized)
+    └── JoyCast_Driver_Dev-25.7.11.0.pkg      # Development PKG (signed & notarized)
+```
+
+**Clean and simple:** Only the essential PKG files for distribution.
+
+### PKG Installer Features
+
+- **Signed & Notarized**: All PKG files are signed with Developer ID Installer certificate and notarized by Apple
+- **Automatic Cleanup**: Removes existing drivers before installing new ones
+- **Permission Setup**: Sets proper ownership (root:wheel) and permissions (755)
+- **CoreAudio Restart**: Automatically restarts CoreAudio to load the new driver
+- **Simple Distribution**: Clean PKG files ready for immediate distribution
 
 ## Installation Script Features
 
