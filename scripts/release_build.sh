@@ -14,8 +14,8 @@ NC='\033[0m'
 echo -e "${GREEN}=== JoyCast Driver Release ===${NC}"
 
 # Check that builds exist
-PROD_BUILD="build/JoyCast.driver"
-DEV_BUILD="build/JoyCast Dev.driver"
+PROD_BUILD="dist/build/JoyCast.driver"
+DEV_BUILD="dist/build/JoyCast Dev.driver"
 
 if [[ ! -d "$PROD_BUILD" ]]; then
     echo -e "${RED}✗ Production build not found: $PROD_BUILD${NC}"
@@ -54,7 +54,7 @@ VERSION="$PROD_VERSION"
 echo -e "${GREEN}✓ Both drivers have version: $VERSION${NC}"
 
 # Create release directory
-RELEASE_DIR="releases/$VERSION"
+RELEASE_DIR="dist/releases/$VERSION"
 if [[ -d "$RELEASE_DIR" ]]; then
     echo -e "${YELLOW}Removing existing release $VERSION${NC}"
     rm -rf "$RELEASE_DIR"

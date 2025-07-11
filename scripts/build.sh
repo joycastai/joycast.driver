@@ -11,21 +11,27 @@ trap 'echo -e "\033[0m" >&2' ERR EXIT
 GREEN='\033[0;32m'
 YELLOW='\033[0;33m'
 RED='\033[0;31m'
+BLUE='\033[0;34m'
+GRAY='\033[0;90m'
 BOLD='\033[1m'
 NC='\033[0m'
 
 # Parse arguments
 NO_UPDATE=false
+KEEP_DEBUG=false
 
 usage() {
-    echo "Usage: $0 [--no-update]"
+    echo "Usage: $0 [--no-update] [--debug]"
     echo "  --no-update - Skip BlackHole submodule update"
+    echo "  --debug     - Keep .dSYM debug files (removed by default)"
     echo ""
     echo "Always builds both prod and dev versions."
     echo ""
     echo "Examples:"
-    echo "  $0                    # Build both versions (latest BlackHole)"
-    echo "  $0 --no-update      # Build both versions (current BlackHole)"
+    echo "  $0                    # Build both versions (latest BlackHole, no debug)"
+    echo "  $0 --no-update      # Build both versions (current BlackHole, no debug)"
+    echo "  $0 --debug          # Build both versions with debug symbols"
+    echo "  $0 --no-update --debug  # Build with current BlackHole + debug symbols"
     exit "${1:-0}"
 }
 
@@ -34,6 +40,9 @@ while [[ $# -gt 0 ]]; do
     case $1 in
         --no-update)
             NO_UPDATE=true
+            ;;
+        --debug)
+            KEEP_DEBUG=true
             ;;
         --help|-h|help)
             usage 0
@@ -179,7 +188,7 @@ build_variant() {
         CODE_SIGN_STYLE="Manual"
         ENABLE_HARDENED_RUNTIME=YES
         ARCHS="arm64 x86_64"
-        CONFIGURATION_BUILD_DIR="$(pwd)/build"
+        CONFIGURATION_BUILD_DIR="$(pwd)/dist/build"
         MARKETING_VERSION="$DRIVER_VERSION"
     )
 
@@ -193,7 +202,7 @@ build_variant() {
     echo -e "${GREEN}Build completed!${NC}"
 
     # Check if driver was created
-    DRIVER_PATH="build/$DRIVER_NAME.driver"
+    DRIVER_PATH="dist/build/$DRIVER_NAME.driver"
     if [[ ! -d "$DRIVER_PATH" ]]; then
         echo -e "${RED}Error: Built driver not found at $DRIVER_PATH${NC}"
         exit 1
@@ -250,8 +259,8 @@ fi
 
 # Clean previous builds
 echo -e "${YELLOW}Cleaning previous builds...${NC}"
-rm -rf build/
-mkdir -p build/
+rm -rf dist/build/
+mkdir -p dist/build/
 
 # Build both variants
 build_variant "prod"
@@ -263,19 +272,46 @@ rm -rf external/blackhole/build/
 
 echo -e "\n${GREEN}=== Build Complete ===${NC}"
 echo "Drivers built:"
-echo "  - build/JoyCast.driver (Production)"
-echo "  - build/JoyCast Dev.driver (Development)"
+echo "  - dist/build/JoyCast.driver (Production)"
+echo "  - dist/build/JoyCast Dev.driver (Development)"
+
+if [[ "$KEEP_DEBUG" = true ]]; then
+    echo "Debug symbols:"
+    echo "  - dist/build/JoyCast.driver.dSYM"
+    echo "  - dist/build/JoyCast Dev.driver.dSYM"
+fi
 
 # Verify both builds
 echo -e "\n${YELLOW}Verifying signatures...${NC}"
-if codesign -v "build/JoyCast.driver" 2>/dev/null; then
+if codesign -v "dist/build/JoyCast.driver" 2>/dev/null; then
     echo -e "${GREEN}✓ Production driver signature valid${NC}"
 else
     echo -e "${YELLOW}! Production driver is unsigned${NC}"
 fi
 
-if codesign -v "build/JoyCast Dev.driver" 2>/dev/null; then
+if codesign -v "dist/build/JoyCast Dev.driver" 2>/dev/null; then
     echo -e "${GREEN}✓ Development driver signature valid${NC}"
 else
     echo -e "${YELLOW}! Development driver is unsigned${NC}"
+fi
+
+# Clean up debug symbols unless --debug flag is provided
+if [[ "$KEEP_DEBUG" = false ]]; then
+    echo -e "\n${YELLOW}Cleaning up debug symbols...${NC}"
+    
+    if [[ -d "dist/build/JoyCast.driver.dSYM" ]]; then
+        rm -rf "dist/build/JoyCast.driver.dSYM"
+        echo -e "${GREEN}✓ Removed JoyCast.driver.dSYM${NC}"
+    fi
+    
+    if [[ -d "dist/build/JoyCast Dev.driver.dSYM" ]]; then
+        rm -rf "dist/build/JoyCast Dev.driver.dSYM"
+        echo -e "${GREEN}✓ Removed JoyCast Dev.driver.dSYM${NC}"
+    fi
+    
+    echo -e "${GRAY}Use --debug flag to keep debug symbols${NC}"
+else
+    echo -e "\n${BLUE}Debug symbols preserved (--debug flag provided)${NC}"
+    echo -e "  📁 dist/build/JoyCast.driver.dSYM"
+    echo -e "  📁 dist/build/JoyCast Dev.driver.dSYM"
 fi 

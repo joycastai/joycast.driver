@@ -17,20 +17,29 @@ echo -e "${GREEN}=== JoyCast Driver Installation ===${NC}"
 MODE="${1:-prod}"
 [[ "$MODE" =~ ^(dev|prod)$ ]] || { echo "Usage: $0 [dev|prod]"; exit 1; }
 
-source "configs/driver.env" || { echo "configs/driver.env not found"; exit 1; }
+# Find driver in build directory
+[[ -d "build" ]] || { echo -e "${RED}Build directory not found${NC}"; exit 1; }
 
-DRIVER_NAME="$BASE_NAME"
-[[ "$MODE" == "dev" ]] && DRIVER_NAME+=" Dev"
-DRIVER_PATH="build/$DRIVER_NAME.driver"
+if [[ "$MODE" == "dev" ]]; then
+    DRIVER_PATH=$(find build -maxdepth 1 -name "*Dev*.driver" | head -1)
+else
+    DRIVER_PATH=$(find build -maxdepth 1 -name "*.driver" ! -name "*Dev*.driver" | head -1)
+fi
+
+[[ -n "$DRIVER_PATH" ]] || { echo -e "${RED}No $MODE driver found in build directory${NC}"; exit 1; }
+
+# Extract driver name from path
+DRIVER_NAME=$(basename "$DRIVER_PATH" .driver)
+
 INSTALL_PATH="/Library/Audio/Plug-Ins/HAL"
-
-[[ -d "$DRIVER_PATH" ]] || { echo -e "${RED}Driver not found: $DRIVER_PATH${NC}"; exit 1; }
 
 echo -e "${GREEN}Installing $DRIVER_NAME.driver → $INSTALL_PATH${NC}"
 
 sudo install -d "$INSTALL_PATH"
+
+# Remove existing driver if present
 [[ -d "$INSTALL_PATH/$DRIVER_NAME.driver" ]] && \
-  sudo mv "$INSTALL_PATH/$DRIVER_NAME.driver" "$INSTALL_PATH/$DRIVER_NAME.driver.$(date +%Y%m%d%H%M%S).bak"
+  sudo rm -rf "$INSTALL_PATH/$DRIVER_NAME.driver"
 
 # Verify signature
 codesign --verify --deep --strict "$DRIVER_PATH"
