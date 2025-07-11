@@ -20,14 +20,11 @@ JoyCast is a virtual audio driver for macOS based on BlackHole.
 git clone --recursive https://github.com/your-org/joycast.driver.git
 cd joycast.driver
 
-# Build production driver (auto-updates BlackHole, signed)
-./scripts/build_driver.sh prod
+# Build both drivers (auto-updates BlackHole, signed)
+./scripts/build.sh
 
-# Install driver (requires admin privileges)
+# Install production driver (requires admin privileges)
 ./scripts/install_driver.sh prod
-
-# Build dev driver (auto-updates BlackHole, signed)
-./scripts/build_driver.sh dev
 
 # Install development version (requires admin privileges)
 ./scripts/install_driver.sh dev
@@ -61,29 +58,25 @@ joycast.driver/
 │   ├── driver.env       # Single configuration file
 │   └── credentials.env  # Code signing credentials
 ├── scripts/
-│   ├── build_driver.sh  # Self-contained build script
+│   ├── build.sh         # Self-contained build script
 │   └── install_driver.sh
 ├── assets/
 │   └── joycast.icns     # Custom icon
-├── build/               # Build outputs (gitignored)
-│   ├── dev/             # Development builds
-│   └── prod/            # Production builds
+├── dist/build/          # Build outputs (gitignored)
 ├── LICENSE              
 └── README.md
 ```
 
 ## Build Outputs
 
-All build outputs are generated in separate directories to avoid conflicts:
+All build outputs are generated in `dist/build/` directory:
 
 ```
-build/
-├── dev/
-│   ├── JoyCast Dev.driver      # Development driver (universal binary)
-│   └── JoyCast Dev.driver.dSYM # Debug symbols for dev
-└── prod/
-    ├── JoyCast.driver          # Production driver (universal binary)
-    └── JoyCast.driver.dSYM     # Debug symbols for prod
+dist/build/
+├── JoyCast.driver              # Production driver (universal binary)
+├── JoyCast Dev.driver          # Development driver (universal binary)
+├── JoyCast.driver.dSYM         # Debug symbols for prod (if --debug)
+└── JoyCast Dev.driver.dSYM     # Debug symbols for dev (if --debug)
 ```
 
 This structure allows you to:
@@ -94,22 +87,19 @@ This structure allows you to:
 
 ## Build Script Options
 
-### `./scripts/build_driver.sh [mode] [flags]`
-
-**Modes:**
-- `dev` - Development build with "Dev" suffixes
-- `prod` - Production build with clean names (default)
+### `./scripts/build.sh [flags]`
 
 **Flags:**
 - `--no-update` - Skip BlackHole submodule update
+- `--debug` - Keep debug symbols (.dSYM files)
 - `--help` - Show usage information
 
 **Examples:**
 ```bash
-./scripts/build_driver.sh dev                    # Dev build, latest BlackHole, signed
-./scripts/build_driver.sh prod --no-update      # Prod build, current BlackHole, signed  
+./scripts/build.sh                              # Build both versions, latest BlackHole
+./scripts/build.sh --no-update                  # Build with current BlackHole version
+./scripts/build.sh --debug                      # Build with debug symbols
 ```
-
 
 ## Installation Script Features
 
@@ -127,10 +117,16 @@ This structure allows you to:
 
 ## BlackHole Updates
 
+**Check current version:**
+```bash
+# View BlackHole version
+cat external/blackhole/VERSION
+```
+
 **Automatic (recommended):**
 ```bash
 # Build script automatically updates to latest BlackHole
-./scripts/build_driver.sh prod
+./scripts/build.sh
 ```
 
 **Manual:**

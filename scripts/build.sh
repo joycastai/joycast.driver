@@ -69,7 +69,7 @@ if ! command -v xcodebuild >/dev/null 2>&1; then
 fi
 
 # Check if we're in the right directory
-if [[ ! -f "scripts/build_driver.sh" ]]; then
+if [[ ! -f "scripts/build.sh" ]]; then
     echo -e "${RED}Error: Please run this script from the repository root${NC}"
     exit 1
 fi
@@ -97,9 +97,9 @@ else
     echo -e "${YELLOW}Skipping submodule update (--no-update flag provided)${NC}"
 fi
 
-# Show BlackHole commit for reproducible builds
-BLACKHOLE_COMMIT=$(git -C external/blackhole rev-parse --short HEAD)
-echo -e "${GREEN}BlackHole commit: $BLACKHOLE_COMMIT${NC}"
+# Show BlackHole version for reproducible builds
+BLACKHOLE_VERSION=$(cat external/blackhole/VERSION 2>/dev/null || echo "unknown")
+echo -e "${GREEN}BlackHole version: $BLACKHOLE_VERSION${NC}"
 
 # Utility functions
 generate_preprocessor_defs() {
@@ -274,6 +274,8 @@ echo -e "\n${GREEN}=== Build Complete ===${NC}"
 echo "Drivers built:"
 echo "  - dist/build/JoyCast.driver (Production)"
 echo "  - dist/build/JoyCast Dev.driver (Development)"
+
+echo -e "\n${BLUE}BlackHole version: $BLACKHOLE_VERSION${NC}"
 
 if [[ "$KEEP_DEBUG" = true ]]; then
     echo "Debug symbols:"
