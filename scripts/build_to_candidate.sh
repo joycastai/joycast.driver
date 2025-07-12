@@ -200,9 +200,9 @@ create_driver_pkg() {
     
     local DRIVER_NAME=$(basename "$DRIVER_PATH" .driver)
     if [[ "$MODE" == "dev" ]]; then
-        local PKG_NAME="JoyCast_Driver_Dev-${VERSION}.pkg"
+        local PKG_NAME="JoyCast Dev Driver-${VERSION}.pkg"
     else
-        local PKG_NAME="JoyCast_Driver-${VERSION}.pkg"
+        local PKG_NAME="JoyCast Driver-${VERSION}.pkg"
     fi
     
     # Create temporary build directory outside candidate dir
@@ -303,10 +303,10 @@ EOF
 echo -e "\n${YELLOW}Creating PKG files...${NC}"
 
 create_driver_pkg "prod" "$PROD_DRIVER"
-PROD_PKG="$CANDIDATE_DIR/JoyCast_Driver-${VERSION}.pkg"
+PROD_PKG="$CANDIDATE_DIR/JoyCast Driver-${VERSION}.pkg"
 
 create_driver_pkg "dev" "$DEV_DRIVER"
-DEV_PKG="$CANDIDATE_DIR/JoyCast_Driver_Dev-${VERSION}.pkg"
+DEV_PKG="$CANDIDATE_DIR/JoyCast Dev Driver-${VERSION}.pkg"
 
 # Notarize PKGs (if credentials available)
 if [[ "$ENABLE_NOTARIZATION" = true ]]; then
