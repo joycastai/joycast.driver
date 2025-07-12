@@ -134,8 +134,8 @@ Release candidates are stored in a single directory per version:
 ```
 dist/candidate/
 └── 25.7.11.0/
-    ├── JoyCast_Driver-25.7.11.0.pkg          # Production PKG (signed & notarized)
-    └── JoyCast_Driver_Dev-25.7.11.0.pkg      # Development PKG (signed & notarized)
+    ├── JoyCast Driver.pkg          # Production PKG (signed & notarized)
+    └── JoyCast Driver Dev.pkg      # Development PKG (signed & notarized)
 ```
 
 **Clean and simple:** Only the essential PKG files for distribution.
