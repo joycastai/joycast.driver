@@ -5,7 +5,15 @@
 
 set -euo pipefail
 IFS=$'\n\t'
-trap 'echo -e "\033[0m" >&2' ERR EXIT
+
+# Cleanup function
+cleanup() {
+    echo -e "\033[0m" >&2
+    # Clean up any temporary directories
+    rm -rf /tmp/joycast_pkg_build_$$ /tmp/joycast_pkg_build_$$_* 2>/dev/null || true
+}
+
+trap cleanup ERR EXIT
 
 # Colors
 GREEN='\033[0;32m'
@@ -261,9 +269,9 @@ EOF
     # Set bundle ID based on mode
     local BUNDLE_ID
     if [[ "$MODE" == "dev" ]]; then
-        BUNDLE_ID="com.joycast.virtualmic.dev.installer"
+        BUNDLE_ID="com.joycast.driver.dev.installer"
     else
-        BUNDLE_ID="com.joycast.virtualmic.installer"
+        BUNDLE_ID="com.joycast.driver.installer"
     fi
     
     echo -e "${GRAY}  Building PKG with pkgbuild...${NC}"
@@ -289,9 +297,6 @@ EOF
         "$CANDIDATE_DIR/$PKG_NAME"
     
     echo -e "${GREEN}✓ PKG created: $PKG_NAME${NC}"
-    
-    # Clean up temp directory
-    rm -rf "$TEMP_DIR"
 }
 
 # Create PKGs

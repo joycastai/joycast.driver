@@ -246,14 +246,14 @@ build_variant() {
 
 # Map credentials to build variables
 DEVELOPMENT_TEAM="$APPLE_TEAM_ID"
-CODE_SIGN_IDENTITY="$CODE_SIGN_CERT_NAME"
+CODE_SIGN_IDENTITY="Developer ID Application: $DEVELOPER_NAME ($APPLE_TEAM_ID)"
 
 # Validate code signing credentials
-if [[ -z "$CODE_SIGN_IDENTITY" || -z "$DEVELOPMENT_TEAM" ]]; then
+if [[ -z "$DEVELOPER_NAME" || -z "$DEVELOPMENT_TEAM" ]]; then
     echo -e "${RED}Error: Code signing credentials not found!${NC}"
     echo "Make sure configs/credentials.env contains:"
     echo "  APPLE_TEAM_ID=your_team_id"
-    echo "  CODE_SIGN_CERT_NAME=your_cert_name"
+    echo "  DEVELOPER_NAME=your_developer_name"
     exit 1
 fi
 
