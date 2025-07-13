@@ -141,15 +141,6 @@ dist/candidate/
 - **CoreAudio Restart**: Automatically restarts CoreAudio to load the new driver
 - **Simple Distribution**: Clean PKG files ready for immediate distribution
 
-## Installation Script Features
-
-### `./scripts/install_build.sh`
-
-**Features:**
-- **Automatic Backup**: Creates timestamped backups of existing drivers
-- **Signature Verification**: Verifies driver signature before installation
-- **Safe Installation**: Proper permissions and ownership setup
-- **CoreAudio Restart**: Automatic restart for immediate driver availability
 
 ## BlackHole Updates
 
@@ -176,6 +167,23 @@ git checkout v0.6.2
 cd ../..
 git add external/blackhole
 git commit -m "Pin BlackHole to v0.6.2"
+```
+
+
+## Uninstall Driver
+
+### `./scripts/uninstall_driver.sh`
+
+**Features:**
+- **Simple Removal**: Quick and safe driver uninstallation
+- **Automatic Privileges**: Handles sudo authentication automatically
+- **CoreAudio Restart**: Restarts audio system after removal
+- **Verification**: Confirms successful removal from system
+
+**Usage:**
+```bash
+# Uninstall JoyCast driver
+./scripts/uninstall_driver.sh
 ```
 
 
