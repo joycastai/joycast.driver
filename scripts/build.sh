@@ -25,12 +25,12 @@ usage() {
     echo "  --no-update - Skip BlackHole submodule update"
     echo "  --debug     - Keep .dSYM debug files (removed by default)"
     echo ""
-    echo "Always builds both prod and dev versions."
+    echo "Builds production version only."
     echo ""
     echo "Examples:"
-    echo "  $0                    # Build both versions (latest BlackHole, no debug)"
-    echo "  $0 --no-update      # Build both versions (current BlackHole, no debug)"
-    echo "  $0 --debug          # Build both versions with debug symbols"
+    echo "  $0                    # Build production version (latest BlackHole, no debug)"
+    echo "  $0 --no-update      # Build production version (current BlackHole, no debug)"
+    echo "  $0 --debug          # Build production version with debug symbols"
     echo "  $0 --no-update --debug  # Build with current BlackHole + debug symbols"
     exit "${1:-0}"
 }
@@ -55,7 +55,7 @@ while [[ $# -gt 0 ]]; do
     shift
 done
 
-echo -e "${GREEN}=== JoyCast Driver Build (Clean Architecture) ===${NC}"
+echo -e "${GREEN}=== JoyCast Driver Build ===${NC}"
 
 # Environment checks
 if [[ "$(uname)" != "Darwin" ]]; then
@@ -142,28 +142,18 @@ else
     echo -e "${YELLOW}Warning: $CREDENTIALS_FILE not found. Code signing may fail.${NC}"
 fi
 
-# Function to build driver variant
-build_variant() {
-    local MODE="$1"
+# Function to build driver
+build_driver() {
+    echo -e "\n${BOLD}${YELLOW}=== Building driver ===${NC}"
     
-    echo -e "\n${BOLD}${YELLOW}=== Building $MODE version ===${NC}"
-    
-    # Generate dev/prod specific variables from config
-    if [[ "$MODE" == "dev" ]]; then
-        DRIVER_NAME="$BASE_NAME$DEV_NAME_SUFFIX"
-        BUNDLE_ID="$BASE_BUNDLE_ID$DEV_BUNDLE_SUFFIX"
-        DEVICE_NAME="$DEV_DEVICE_NAME_PATTERN"
-        DEVICE2_NAME="$DEV_DEVICE2_NAME_PATTERN"
-        BOX_UID="$DEV_BOX_UID_PATTERN"
-    else
-        DRIVER_NAME="$BASE_NAME$PROD_NAME_SUFFIX"
-        BUNDLE_ID="$BASE_BUNDLE_ID$PROD_BUNDLE_SUFFIX"
-        DEVICE_NAME="$PROD_DEVICE_NAME_PATTERN"
-        DEVICE2_NAME="$PROD_DEVICE2_NAME_PATTERN"
-        BOX_UID="$PROD_BOX_UID_PATTERN"
-    fi
+    # Use production configuration
+    DRIVER_NAME="$BASE_NAME$NAME_SUFFIX"
+    BUNDLE_ID="$BASE_BUNDLE_ID$BUNDLE_SUFFIX"
+    DEVICE_NAME="$DEVICE_NAME_PATTERN"
+    DEVICE2_NAME="$DEVICE2_NAME_PATTERN"
+    BOX_UID="$BOX_UID_PATTERN"
 
-    echo "Build mode: $MODE (signed with $CODE_SIGN_IDENTITY)"
+    echo "Build mode: production (signed with $CODE_SIGN_IDENTITY)"
     echo "Driver: $DRIVER_NAME.driver"
     echo "Version: $DRIVER_VERSION"
 
@@ -262,39 +252,30 @@ echo -e "${YELLOW}Cleaning previous builds...${NC}"
 rm -rf dist/build/
 mkdir -p dist/build/
 
-# Build both variants
-build_variant "prod"
-build_variant "dev"
+# Build driver
+build_driver
 
 # Clean up temporary build files from submodule
 echo -e "\n${YELLOW}Cleaning temporary build files from submodule...${NC}"
 rm -rf external/blackhole/build/
 
 echo -e "\n${GREEN}=== Build Complete ===${NC}"
-echo "Drivers built:"
+echo "Driver built:"
 echo "  - dist/build/JoyCast.driver (Production)"
-echo "  - dist/build/JoyCast Dev.driver (Development)"
 
 echo -e "\n${BLUE}BlackHole version: $BLACKHOLE_VERSION${NC}"
 
 if [[ "$KEEP_DEBUG" = true ]]; then
     echo "Debug symbols:"
     echo "  - dist/build/JoyCast.driver.dSYM"
-    echo "  - dist/build/JoyCast Dev.driver.dSYM"
 fi
 
-# Verify both builds
-echo -e "\n${YELLOW}Verifying signatures...${NC}"
+# Verify build
+echo -e "\n${YELLOW}Verifying signature...${NC}"
 if codesign -v "dist/build/JoyCast.driver" 2>/dev/null; then
-    echo -e "${GREEN}✓ Production driver signature valid${NC}"
+    echo -e "${GREEN}✓ Driver signature valid${NC}"
 else
-    echo -e "${YELLOW}! Production driver is unsigned${NC}"
-fi
-
-if codesign -v "dist/build/JoyCast Dev.driver" 2>/dev/null; then
-    echo -e "${GREEN}✓ Development driver signature valid${NC}"
-else
-    echo -e "${YELLOW}! Development driver is unsigned${NC}"
+    echo -e "${YELLOW}! Driver is unsigned${NC}"
 fi
 
 # Clean up debug symbols unless --debug flag is provided
@@ -306,14 +287,8 @@ if [[ "$KEEP_DEBUG" = false ]]; then
         echo -e "${GREEN}✓ Removed JoyCast.driver.dSYM${NC}"
     fi
     
-    if [[ -d "dist/build/JoyCast Dev.driver.dSYM" ]]; then
-        rm -rf "dist/build/JoyCast Dev.driver.dSYM"
-        echo -e "${GREEN}✓ Removed JoyCast Dev.driver.dSYM${NC}"
-    fi
-    
     echo -e "${GRAY}Use --debug flag to keep debug symbols${NC}"
 else
     echo -e "\n${BLUE}Debug symbols preserved (--debug flag provided)${NC}"
     echo -e "  📁 dist/build/JoyCast.driver.dSYM"
-    echo -e "  📁 dist/build/JoyCast Dev.driver.dSYM"
 fi 

@@ -29,14 +29,14 @@ SKIP_BUILD=false
 
 usage() {
     echo "Usage: $0 [--skip-build]"
-    echo "  --skip-build  - Skip driver build, use existing drivers (for development only)"
+    echo "  --skip-build  - Skip driver build, use existing driver (for development only)"
     echo ""
-    echo "Creates signed and notarized PKG files for both dev and prod drivers."
-    echo "Always rebuilds drivers from source by default for reproducible releases."
+    echo "Creates signed and notarized PKG file for production driver."
+    echo "Always rebuilds driver from source by default for reproducible releases."
     echo ""
     echo "Examples:"
-    echo "  $0              # Clean build and create PKG candidates (recommended)"
-    echo "  $0 --skip-build # Use existing drivers (development/testing only)"
+    echo "  $0              # Clean build and create PKG candidate (recommended)"
+    echo "  $0 --skip-build # Use existing driver (development/testing only)"
     exit "${1:-0}"
 }
 
@@ -149,32 +149,25 @@ fi
 
 # Build drivers if not skipping
 if [[ "$SKIP_BUILD" = false ]]; then
-    echo -e "\n${YELLOW}Building drivers from source...${NC}"
+    echo -e "\n${YELLOW}Building driver from source...${NC}"
     echo -e "${GRAY}This ensures reproducible builds and clean artifacts${NC}"
     ./scripts/build.sh
 else
     echo -e "\n${YELLOW}⚠️  WARNING: Skipping driver build (--skip-build flag provided)${NC}"
-    echo -e "${GRAY}Using existing drivers - only recommended for development/testing${NC}"
+    echo -e "${GRAY}Using existing driver - only recommended for development/testing${NC}"
     echo -e "${GRAY}Production releases should always rebuild from source${NC}"
 fi
 
-# Check for built drivers
-echo -e "\n${YELLOW}Checking for built drivers...${NC}"
+# Check for built driver
+echo -e "\n${YELLOW}Checking for built driver...${NC}"
 PROD_DRIVER="dist/build/JoyCast.driver"
-DEV_DRIVER="dist/build/JoyCast Dev.driver"
 
 if [[ ! -d "$PROD_DRIVER" ]]; then
     echo -e "${RED}Error: Production driver not found at $PROD_DRIVER${NC}"
     exit 1
 fi
 
-if [[ ! -d "$DEV_DRIVER" ]]; then
-    echo -e "${RED}Error: Development driver not found at $DEV_DRIVER${NC}"
-    exit 1
-fi
-
 echo -e "${GREEN}✓ Production driver: $PROD_DRIVER${NC}"
-echo -e "${GREEN}✓ Development driver: $DEV_DRIVER${NC}"
 
 # Generate version (same format as build.sh)
 BASE_VERSION=$(date +"%y.%-m.%-d")
@@ -193,20 +186,15 @@ echo -e "${GREEN}✓ Candidate directory: $CANDIDATE_DIR${NC}"
 
 # Function to create PKG for a driver
 create_driver_pkg() {
-    local MODE="$1"
-    local DRIVER_PATH="$2"
+    local DRIVER_PATH="$1"
     
-    echo -e "\n${BOLD}${YELLOW}=== Creating $MODE PKG ===${NC}"
+    echo -e "\n${BOLD}${YELLOW}=== Creating PKG ===${NC}"
     
     local DRIVER_NAME=$(basename "$DRIVER_PATH" .driver)
-    if [[ "$MODE" == "dev" ]]; then
-        local PKG_NAME="JoyCast Driver Dev.pkg"
-    else
-        local PKG_NAME="JoyCast Driver.pkg"
-    fi
+    local PKG_NAME="JoyCast Driver.pkg"
     
     # Create temporary build directory outside candidate dir
-    local TEMP_DIR="/tmp/joycast_pkg_build_$$_$MODE"
+    local TEMP_DIR="/tmp/joycast_pkg_build_$$"
     mkdir -p "$TEMP_DIR/payload/Library/Audio/Plug-Ins/HAL"
     
     # Copy driver to payload
@@ -266,13 +254,8 @@ EOF
     # Make scripts executable
     chmod +x "$TEMP_DIR/scripts/"*
     
-    # Set bundle ID based on mode
-    local BUNDLE_ID
-    if [[ "$MODE" == "dev" ]]; then
-        BUNDLE_ID="com.joycast.driver.dev.installer"
-    else
-        BUNDLE_ID="com.joycast.driver.installer"
-    fi
+    # Set bundle ID
+    local BUNDLE_ID="com.joycast.driver.installer"
     
     echo -e "${GRAY}  Building PKG with pkgbuild...${NC}"
     
@@ -299,16 +282,13 @@ EOF
     echo -e "${GREEN}✓ PKG created: $PKG_NAME${NC}"
 }
 
-# Create PKGs
-echo -e "\n${YELLOW}Creating PKG files...${NC}"
+# Create PKG
+echo -e "\n${YELLOW}Creating PKG file...${NC}"
 
-create_driver_pkg "prod" "$PROD_DRIVER"
+create_driver_pkg "$PROD_DRIVER"
 PROD_PKG="$CANDIDATE_DIR/JoyCast Driver.pkg"
 
-create_driver_pkg "dev" "$DEV_DRIVER"
-DEV_PKG="$CANDIDATE_DIR/JoyCast Driver Dev.pkg"
-
-# Notarize PKGs (if credentials available)
+# Notarize PKG (if credentials available)
 if [[ "$ENABLE_NOTARIZATION" = true ]]; then
     echo -e "\n${YELLOW}Notarizing PKG files...${NC}"
 
@@ -331,20 +311,18 @@ if [[ "$ENABLE_NOTARIZATION" = true ]]; then
         echo -e "${GREEN}✓ $PKG_NAME notarized and stapled${NC}"
     }
 
-    # Notarize both PKGs
+    # Notarize PKG
     notarize_pkg "$PROD_PKG"
-    notarize_pkg "$DEV_PKG"
 else
     echo -e "\n${YELLOW}Skipping notarization (credentials not available)${NC}"
 fi
 
 
 
-echo -e "\n${BOLD}${GREEN}=== Release Candidates Created ===${NC}"
+echo -e "\n${BOLD}${GREEN}=== Release Candidate Created ===${NC}"
 echo -e "${GREEN}Release directory:${NC} $CANDIDATE_DIR"
-echo -e "${GREEN}PKG files:${NC}"
+echo -e "${GREEN}PKG file:${NC}"
 echo -e "  📦 $(basename "$PROD_PKG")"
-echo -e "  📦 $(basename "$DEV_PKG")"
 
 echo -e "\n${BLUE}Next steps:${NC}"
 echo -e "  1. Test PKG installation on clean system"
@@ -352,4 +330,4 @@ echo -e "  2. Verify driver loads correctly in Audio MIDI Setup"
 echo -e "  3. Test with applications that use virtual audio devices"
 echo -e "  4. Upload to release distribution (if tests pass)"
 
-echo -e "\n${GRAY}Release candidates ready for testing and distribution!${NC}" 
+echo -e "\n${GRAY}Release candidate ready for testing and distribution!${NC}" 

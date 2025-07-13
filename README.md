@@ -20,14 +20,11 @@ JoyCast is a virtual audio driver for macOS based on BlackHole.
 git clone --recursive https://github.com/your-org/joycast.driver.git
 cd joycast.driver
 
-# Build both drivers (auto-updates BlackHole, signed)
+# Build driver (auto-updates BlackHole, signed)
 ./scripts/build.sh
 
-# Install production driver (requires admin privileges)
-./scripts/install_driver.sh prod
-
-# Install development version (requires admin privileges)
-./scripts/install_driver.sh dev
+# Install driver (requires admin privileges)
+./scripts/install_build.sh
 ```
 
 ### Code Signing Setup
@@ -77,16 +74,13 @@ All build outputs are generated in `dist/build/` directory:
 ```
 dist/build/
 ├── JoyCast.driver              # Production driver (universal binary)
-├── JoyCast Dev.driver          # Development driver (universal binary)
-├── JoyCast.driver.dSYM         # Debug symbols for prod (if --debug)
-└── JoyCast Dev.driver.dSYM     # Debug symbols for dev (if --debug)
+└── JoyCast.driver.dSYM         # Debug symbols (if --debug)
 ```
 
 This structure allows you to:
-- Keep both dev and prod builds simultaneously
-- Switch between versions quickly without rebuilding
-- Compare outputs between different configurations
+- Clean production builds
 - Support both Intel and Apple Silicon Macs with single binary
+- Optional debug symbols for development
 
 ## Build Script Options
 
@@ -99,7 +93,7 @@ This structure allows you to:
 
 **Examples:**
 ```bash
-./scripts/build.sh                              # Build both versions, latest BlackHole
+./scripts/build.sh                              # Build production version, latest BlackHole
 ./scripts/build.sh --no-update                  # Build with current BlackHole version
 ./scripts/build.sh --debug                      # Build with debug symbols
 ```
@@ -108,7 +102,7 @@ This structure allows you to:
 
 ### `./scripts/build_to_candidate.sh [flags]`
 
-Creates signed and notarized PKG installers for distribution. Always builds both dev and prod versions.
+Creates signed and notarized PKG installer for distribution.
 
 **Flags:**
 - `--skip-build` - Skip driver build, use existing drivers (development only)
@@ -134,11 +128,10 @@ Release candidates are stored in a single directory per version:
 ```
 dist/candidate/
 └── 25.7.11.0/
-    ├── JoyCast Driver.pkg          # Production PKG (signed & notarized)
-    └── JoyCast Driver Dev.pkg      # Development PKG (signed & notarized)
+    └── JoyCast Driver.pkg          # Production PKG (signed & notarized)
 ```
 
-**Clean and simple:** Only the essential PKG files for distribution.
+**Clean and simple:** Only the essential PKG file for distribution.
 
 ### PKG Installer Features
 
@@ -150,11 +143,7 @@ dist/candidate/
 
 ## Installation Script Features
 
-### `./scripts/install_driver.sh [mode]`
-
-**Modes:**
-- `dev` - Install development driver
-- `prod` - Install production driver (default)
+### `./scripts/install_build.sh`
 
 **Features:**
 - **Automatic Backup**: Creates timestamped backups of existing drivers
