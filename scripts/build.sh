@@ -111,7 +111,7 @@ generate_preprocessor_defs() {
     
     # Generate comprehensive preprocessor definitions string
     # Based on BlackHole customization parameters: https://github.com/ExistentialAudio/BlackHole
-    echo "kDriver_Name=\\\"$safe_driver_name\\\" kPlugIn_BundleID=\\\"$BUNDLE_ID\\\" kPlugIn_Icon=\\\"$PLUGIN_ICON\\\" kManufacturer_Name=\\\"$safe_manufacturer_name\\\" kDevice_Name=\\\"$safe_device_name\\\" kDevice_IsHidden=$DEVICE_IS_HIDDEN kDevice_HasInput=$DEVICE_HAS_INPUT kDevice_HasOutput=$DEVICE_HAS_OUTPUT kDevice2_Name=\\\"$safe_device2_name\\\" kDevice2_IsHidden=$DEVICE2_IS_HIDDEN kDevice2_HasInput=$DEVICE2_HAS_INPUT kDevice2_HasOutput=$DEVICE2_HAS_OUTPUT kBox_UID=\\\"$BOX_UID\\\" kLatency_Frame_Size=$LATENCY_FRAME_SIZE kNumber_Of_Channels=$NUMBER_OF_CHANNELS kSampleRates='$SAMPLE_RATES'"
+    echo "kDriver_Name=\\\"$safe_driver_name\\\" kPlugIn_BundleID=\\\"$BUNDLE_ID\\\" kPlugIn_Icon=\\\"$DRIVER_ICON\\\" kManufacturer_Name=\\\"$safe_manufacturer_name\\\" kDevice_Name=\\\"$safe_device_name\\\" kDevice_IsHidden=$DEVICE_IS_HIDDEN kDevice_HasInput=$DEVICE_HAS_INPUT kDevice_HasOutput=$DEVICE_HAS_OUTPUT kDevice2_Name=\\\"$safe_device2_name\\\" kDevice2_IsHidden=$DEVICE2_IS_HIDDEN kDevice2_HasInput=$DEVICE2_HAS_INPUT kDevice2_HasOutput=$DEVICE2_HAS_OUTPUT kLatency_Frame_Size=$LATENCY_FRAME_SIZE kNumber_Of_Channels=$NUMBER_OF_CHANNELS kSampleRates='$SAMPLE_RATES'"
 }
 
 # Generate driver version (always .0)
@@ -146,13 +146,9 @@ fi
 build_driver() {
     echo -e "\n${BOLD}${YELLOW}=== Building driver ===${NC}"
     
-    # Use production configuration
-    DRIVER_NAME="$BASE_NAME$NAME_SUFFIX"
-    BUNDLE_ID="$BASE_BUNDLE_ID$BUNDLE_SUFFIX"
-    DEVICE_NAME="$DEVICE_NAME_PATTERN"
-    DEVICE2_NAME="$DEVICE2_NAME_PATTERN"
-    BOX_UID="$BOX_UID_PATTERN"
-
+    # Use configuration from driver.env
+    # Variables are already loaded from driver.env
+    
     echo "Build mode: production (signed with $CODE_SIGN_IDENTITY)"
     echo "Driver: $DRIVER_NAME.driver"
     echo "Version: $DRIVER_VERSION"
@@ -204,11 +200,11 @@ build_driver() {
     RESOURCES_PATH="$DRIVER_PATH/Contents/Resources"
 
     # Copy JoyCast icon
-    if [[ -f "assets/$PLUGIN_ICON" ]]; then
-        cp "assets/$PLUGIN_ICON" "$RESOURCES_PATH/"
-        echo "JoyCast icon copied: $PLUGIN_ICON"
+    if [[ -f "assets/$DRIVER_ICON" ]]; then
+        cp "assets/$DRIVER_ICON" "$RESOURCES_PATH/"
+        echo "JoyCast icon copied: $DRIVER_ICON"
     else
-        echo -e "${YELLOW}Warning: $PLUGIN_ICON not found in assets/${NC}"
+        echo -e "${YELLOW}Warning: $DRIVER_ICON not found in assets/${NC}"
     fi
 
     # Replace license with JoyCast license
