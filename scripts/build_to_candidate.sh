@@ -160,7 +160,14 @@ fi
 
 # Check for built driver
 echo -e "\n${YELLOW}Checking for built driver...${NC}"
-PROD_DRIVER="dist/build/JoyCast.driver"
+
+# Find driver in dist/build directory (more flexible approach)
+PROD_DRIVER=$(find dist/build -maxdepth 1 -name "*.driver" | head -1)
+
+if [[ -z "$PROD_DRIVER" ]]; then
+    echo -e "${RED}Error: No driver found in dist/build directory${NC}"
+    exit 1
+fi
 
 if [[ ! -d "$PROD_DRIVER" ]]; then
     echo -e "${RED}Error: Production driver not found at $PROD_DRIVER${NC}"

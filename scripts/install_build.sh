@@ -6,6 +6,34 @@ trap 'echo -e "\033[0;31m✖ Installation failed\033[0m"' ERR
 
 GREEN='\033[0;32m'; YELLOW='\033[0;33m'; RED='\033[0;31m'; NC='\033[0m'
 
+# Parse arguments
+usage() {
+    echo "Usage: $0 [--help]"
+    echo ""
+    echo "Installs JoyCast driver from dist/build/ directory."
+    echo ""
+    echo "Options:"
+    echo "  --help, -h    Show this help message"
+    echo ""
+    echo "Examples:"
+    echo "  $0            # Install driver from dist/build/"
+    exit "${1:-0}"
+}
+
+# Check for help flag
+case "${1:-}" in
+    --help|-h|help)
+        usage 0
+        ;;
+    "")
+        # No arguments, proceed normally
+        ;;
+    *)
+        echo -e "${RED}Error: Unknown argument '$1'${NC}"
+        usage 1
+        ;;
+esac
+
 echo -e "${GREEN}=== JoyCast Driver Installation ===${NC}"
 
 # Environment checks
