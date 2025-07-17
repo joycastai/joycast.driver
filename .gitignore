@@ -10,12 +10,6 @@ DerivedData/
 .vscode/
 .idea/
 
-# Archives (but not in releases/)
-*.driver
-!releases/**/*.driver
-*.dmg
-*.pkg
-
 # Credentials
 configs/credentials.env
 
