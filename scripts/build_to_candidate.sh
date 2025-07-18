@@ -24,28 +24,20 @@ GRAY='\033[0;90m'
 BOLD='\033[1m'
 NC='\033[0m'
 
-# Parse arguments
-SKIP_BUILD=false
-
 usage() {
-    echo "Usage: $0 [--skip-build]"
-    echo "  --skip-build  - Skip driver build, use existing driver (for development only)"
+    echo "Usage: $0"
     echo ""
     echo "Creates signed and notarized PKG file for production driver."
-    echo "Always rebuilds driver from source by default for reproducible releases."
+    echo "Always rebuilds driver from source for reproducible releases."
     echo ""
     echo "Examples:"
-    echo "  $0              # Clean build and create PKG candidate (recommended)"
-    echo "  $0 --skip-build # Use existing driver (development/testing only)"
+    echo "  $0              # Clean build and create PKG candidate"
     exit "${1:-0}"
 }
 
 # Parse arguments
 while [[ $# -gt 0 ]]; do
     case $1 in
-        --skip-build)
-            SKIP_BUILD=true
-            ;;
         --help|-h|help)
             usage 0
             ;;
@@ -135,9 +127,7 @@ if [[ -d ".git" ]]; then
     if [[ -n "$(git status --porcelain)" ]]; then
         echo -e "${YELLOW}⚠️  WARNING: Uncommitted changes detected${NC}"
         echo -e "${GRAY}For production releases, commit all changes first${NC}"
-        if [[ "$SKIP_BUILD" = false ]]; then
-            echo -e "${GRAY}Current changes will be included in this build${NC}"
-        fi
+        echo -e "${GRAY}Current changes will be included in this build${NC}"
     else
         echo -e "${GREEN}✓ Git working directory is clean${NC}"
     fi
@@ -147,16 +137,10 @@ if [[ -d ".git" ]]; then
     echo -e "${GRAY}Building from branch: $CURRENT_BRANCH ($CURRENT_COMMIT)${NC}"
 fi
 
-# Build drivers if not skipping
-if [[ "$SKIP_BUILD" = false ]]; then
-    echo -e "\n${YELLOW}Building driver from source...${NC}"
-    echo -e "${GRAY}This ensures reproducible builds and clean artifacts${NC}"
-    ./scripts/build.sh
-else
-    echo -e "\n${YELLOW}⚠️  WARNING: Skipping driver build (--skip-build flag provided)${NC}"
-    echo -e "${GRAY}Using existing driver - only recommended for development/testing${NC}"
-    echo -e "${GRAY}Production releases should always rebuild from source${NC}"
-fi
+# Build driver from source
+echo -e "\n${YELLOW}Building driver from source...${NC}"
+echo -e "${GRAY}This ensures reproducible builds and clean artifacts${NC}"
+./scripts/build.sh
 
 # Check for built driver
 echo -e "\n${YELLOW}Checking for built driver...${NC}"
@@ -176,15 +160,15 @@ fi
 
 echo -e "${GREEN}✓ Production driver: $PROD_DRIVER${NC}"
 
-# Generate version (same format as build.sh)
+# Generate version (format: YY.M.D without .0)
 BASE_VERSION=$(date +"%y.%-m.%-d")
-VERSION="${BASE_VERSION}.0"
+VERSION="$BASE_VERSION"
 
 echo -e "\n${YELLOW}Version: $VERSION${NC}"
 
 # Create candidate directory
 echo -e "\n${YELLOW}Creating candidate directory...${NC}"
-CANDIDATE_DIR="dist/candidate/$VERSION"
+CANDIDATE_DIR="dist/candidate"
 
 rm -rf "$CANDIDATE_DIR"
 mkdir -p "$CANDIDATE_DIR"
@@ -198,7 +182,7 @@ create_driver_pkg() {
     echo -e "\n${BOLD}${YELLOW}=== Creating PKG ===${NC}"
     
     local DRIVER_NAME=$(basename "$DRIVER_PATH" .driver)
-    local PKG_NAME="JoyCast Driver.pkg"
+    local PKG_NAME="JoyCast.driver-$VERSION.pkg"
     
     # Create temporary build directory outside candidate dir
     local TEMP_DIR="/tmp/joycast_pkg_build_$$"
@@ -293,7 +277,7 @@ EOF
 echo -e "\n${YELLOW}Creating PKG file...${NC}"
 
 create_driver_pkg "$PROD_DRIVER"
-PROD_PKG="$CANDIDATE_DIR/JoyCast Driver.pkg"
+PROD_PKG="$CANDIDATE_DIR/JoyCast.driver-$VERSION.pkg"
 
 # Notarize PKG (if credentials available)
 if [[ "$ENABLE_NOTARIZATION" = true ]]; then
