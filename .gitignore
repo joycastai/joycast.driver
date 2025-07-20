@@ -13,11 +13,6 @@ DerivedData/
 # Credentials
 configs/credentials.env
 
-# Build outputs
-build/
-
-# Candidate builds (temporary)
+# Dist outputs
+dist/build/
 dist/candidate/
-
-# Releases are tracked
-!releases/
