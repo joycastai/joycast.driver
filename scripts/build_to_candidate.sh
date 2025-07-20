@@ -10,6 +10,10 @@ IFS=$'\n\t'
 cleanup() {
     echo -e "\033[0m" >&2
     # Clean up any temporary directories
+    if [[ -n "${TEMP_DIR:-}" && -d "$TEMP_DIR" ]]; then
+        rm -rf "$TEMP_DIR" 2>/dev/null || true
+    fi
+    # Also clean up any other temp directories from this process
     rm -rf /tmp/joycast_pkg_build_$$ /tmp/joycast_pkg_build_$$_* 2>/dev/null || true
 }
 
@@ -160,11 +164,23 @@ fi
 
 echo -e "${GREEN}✓ Production driver: $PROD_DRIVER${NC}"
 
-# Generate version (format: YY.M.D without .0)
-BASE_VERSION=$(date +"%y.%-m.%-d")
-VERSION="$BASE_VERSION"
+# Get version from built driver's Info.plist
+echo -e "\n${YELLOW}Getting version from built driver...${NC}"
+VERSION=$(plutil -p "$PROD_DRIVER/Contents/Info.plist" | grep "CFBundleShortVersionString" | sed 's/.*=> "\(.*\)"/\1/')
 
-echo -e "\n${YELLOW}Version: $VERSION${NC}"
+if [[ -z "$VERSION" ]]; then
+    echo -e "${RED}Error: Could not extract version from driver${NC}"
+    exit 1
+fi
+
+# Validate version format (YY.M.D.0)
+if ! [[ "$VERSION" =~ ^[0-9]{2}\.[0-9]{1,2}\.[0-9]{1,2}\.0$ ]]; then
+    echo -e "${RED}Error: Version '$VERSION' does not match expected format YY.M.D.0${NC}"
+    echo -e "${GRAY}Expected format: YY.M.D.0 (e.g., 25.7.20.0)${NC}"
+    exit 1
+fi
+
+echo -e "${YELLOW}Version: $VERSION${NC}"
 
 # Create candidate directory
 echo -e "\n${YELLOW}Creating candidate directory...${NC}"
@@ -250,14 +266,7 @@ EOF
     
     echo -e "${GRAY}  Building PKG with pkgbuild...${NC}"
     
-    # Get installer certificate name
-    local INSTALLER_CERT_NAME=$(security find-identity -v -p basic | grep "Developer ID Installer" | head -1 | sed 's/.*"\(Developer ID Installer.*\)"/\1/')
-    
-    if [[ -z "$INSTALLER_CERT_NAME" ]]; then
-        echo -e "${RED}Error: Developer ID Installer certificate not found${NC}"
-        exit 1
-    fi
-    
+    # Use installer certificate from credentials
     echo -e "${GRAY}  Using installer certificate: $INSTALLER_CERT_NAME${NC}"
     
     # Build PKG directly in candidate directory
@@ -314,6 +323,12 @@ echo -e "\n${BOLD}${GREEN}=== Release Candidate Created ===${NC}"
 echo -e "${GREEN}Release directory:${NC} $CANDIDATE_DIR"
 echo -e "${GREEN}PKG file:${NC}"
 echo -e "  📦 $(basename "$PROD_PKG")"
+
+# Display file size and checksum
+PKG_SIZE=$(ls -lh "$PROD_PKG" | awk '{print $5}')
+PKG_SHA256=$(shasum -a 256 "$PROD_PKG" | awk '{print $1}')
+echo -e "${GREEN}File size:${NC} $PKG_SIZE"
+echo -e "${GREEN}SHA-256:${NC} $PKG_SHA256"
 
 echo -e "\n${BLUE}Next steps:${NC}"
 echo -e "  1. Test PKG installation on clean system"
