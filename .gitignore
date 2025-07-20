@@ -16,5 +16,8 @@ configs/credentials.env
 # Build outputs
 build/
 
+# Candidate builds (temporary)
+dist/candidate/
+
 # Releases are tracked
 !releases/
